@@ -1,7 +1,7 @@
 # Known limits
 
-- No AI keys were supplied. Real Groq/Gemma inference, live edit quality, provider latency and account quotas have not been exercised. Mocked adapter and browser fixtures verify plumbing, not model intelligence.
-- The user deployed to Vercel after the initial task. The new Vercel function is tested over local HTTP with mocked upstream inference; see TEST_RESULTS for live deployment verification. Cloudflare authentication is still unavailable.
+- Workspace keys remain unavailable, but Vercel’s existing server-side Groq key was used successfully for live generation, gameplay and an edit. Gemma remains mocked-adapter tested only. Account quotas and billing settings were not inspected; use only an eligible free account.
+- The user’s Vercel deployment is live and verified at https://justplay-olive-eta.vercel.app/. Cloudflare remains dry-run verified only; its authentication is unavailable.
 - REA MCP unavailable; Instaplay research used public HTML/bootstrap evidence. Its private backend and game quality are not established by this research. Groq documentation and Kenney download access returned 403.
 - Three constrained game families, three visual themes, three heroes, slime/bat enemies. Survival is top-down and has no jump mechanic. Runner uses endless-runner controls and increasing speed with a finite finish target. No arbitrary genres, multiplayer, user scripting or uploaded artwork.
 - Platform ground paths remain continuous. Optional ledges are bounded; crystals remain on the ground route. This favors reliability over varied platform puzzles. Original pixel animations are deliberately small 4-frame sets; there is no large commercial asset pack. Gold crystals restore one health. No checkpoints or complex power-up inventory.

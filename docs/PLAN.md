@@ -30,3 +30,7 @@ Browser QA found and repaired Phaser startup timing, keyboard capture, touch foc
 ## Vercel follow-up
 
 The user deployed to Vercel, reported a missing API, and authorized working directly on main. Added the native Vercel function, host-specific server environment/limiter, security/build configuration and actionable accessible failures. Verified 40 unit/integration and 12 browser tests (10 existing + 2 native HTTP adapter). The supplied corrected production URL is https://justplay-olive-eta.vercel.app/; baseline API returned 404. Live verification will follow the main push.
+
+## Vercel follow-up completed
+
+The automatic Vercel deployment now serves the native Node API. Live Groq creation produced Fox Crystal Quest, browser controls collected two crystals with no page errors, and a live edit changed only difficulty (1 to 2). Updated the retired Groq default and normalized its legacy environment setting; strict JSON-schema output resolves invalid designs. Final tests: 49 unit/integration, 12 browser, NodeNext emitted-runtime HTTP smoke, typecheck/lint/build. Workspace secrets were never required or exposed.

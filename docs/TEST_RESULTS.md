@@ -1,5 +1,21 @@
 # Verification — 2026-10-31
 
+## Current Vercel result
+
+**Live app:** https://justplay-olive-eta.vercel.app/
+
+- **49 unit/integration tests passed.**
+- **12 browser tests passed** (10 gameplay/UI + 2 native Vercel HTTP tests).
+- Typecheck, lint, production build, emitted NodeNext ESM import/HTTP smoke all passed. Vercel’s automatic build for `e5de03d` succeeded.
+- Production GET `/api/generate` now returns **405 JSON**, replacing the original 404.
+- A real browser prompt created **Fox Crystal Quest** through Groq with HTTP **200**, using strict GameSpec JSON-schema output. Played the generated game: **2 crystals collected, health 4, no page errors**. No API response mocking or fixture fallback was used in this production check.
+- A real edit request returned HTTP **200**, changed difficulty **1 → 2**, and preserved every other field. Both live responses passed shared validation.
+- [Live gameplay screenshot](screenshots/vercel-live-game.png) · [desktop error state](screenshots/vercel-error-desktop.png) · [mobile error state](screenshots/vercel-error-mobile.png).
+
+Live debugging found three independent problems: missing Vercel API discovery, Node function startup/ESM compatibility, and an unavailable/retired Groq model. Legacy `llama-3.3-70b-versatile` now maps to current `openai/gpt-oss-20b`. JSON mode alone failed live validation; strict JSON-schema decoding with a bounded output allowance solved it. Secrets stayed in Vercel throughout. Provider quota/billing eligibility was not inspected.
+
+## Initial implementation results
+
 | Check actually run                 | Result                                                               |
 | ---------------------------------- | -------------------------------------------------------------------- |
 | `npm run typecheck`                | Passed                                                               |

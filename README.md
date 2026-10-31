@@ -15,7 +15,7 @@ Describe your game in a few words and AI generates a professional 2D game in sec
 - Strict Zod GameSpec pipeline; separate Groq and Gemini/Gemma 4 adapters; server-only credentials, request bounds, timeout/repair/quota errors and a Cloudflare rate-limit binding.
 - Studio edits, immutable version history, IndexedDB saves/reopen/delete, JSON export/import.
 
-**No live AI or deployment is claimed.** The task environment supplied no keys. Authored local examples and their four deterministic edit suggestions are explicitly labeled; arbitrary prompts use the real server proxy and fail honestly if it is not configured.
+**[Open JustPlay](https://justplay-olive-eta.vercel.app/)** — live Groq generation, browser gameplay and a difficulty edit were verified on Vercel. Gemma remains adapter-tested only. Authored local examples and their four deterministic edit suggestions are explicitly labeled; arbitrary prompts use the server proxy and available provider quota.
 
 ## Deploy on Vercel
 

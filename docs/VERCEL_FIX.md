@@ -26,3 +26,7 @@ Validation results and production observations are in TEST_RESULTS.md. Keys are 
 ## Runtime verification
 
 The first Vercel build succeeded but live invocation failed before the handler returned JSON. The adapter now uses the established Node request/response signature and explicit `.js` imports throughout the shared server ESM graph. `npm run check:vercel` compiles with NodeNext, imports the emitted module in Node, and exercises the actual HTTP adapter (405 method guard, 503 missing key, 403 origin guard). This catches a class of module-loading errors that Vite's SSR transform can conceal. No deployment logs were available to attribute the original invocation failure more precisely.
+
+## Production outcome
+
+Verified on the user’s corrected URL https://justplay-olive-eta.vercel.app/: the Node function responds with JSON, real Groq generation returns a valid playable forest platformer, and a real edit increases difficulty by one while preserving all unrelated fields. The unavailable legacy Llama model setting is migrated to GPT OSS 20B. Groq output now uses strict JSON-schema decoding; invalid model data is still never executed or accepted as a game. No environment-key changes were needed for the verified deployment. See TEST_RESULTS.md and its live screenshot.
