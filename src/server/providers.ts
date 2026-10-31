@@ -32,7 +32,7 @@ export interface AIProvider {
 }
 const groqSchema = JSON.parse(designContract) as Record<string, unknown>;
 delete groqSchema.$schema;
-// minItems:0 is redundant and rejected by some constrained JSON decoders.
+// Omit redundant minItems:0 to keep the decoder contract simple.
 function stripRedundantArrayBounds(value: unknown) {
   if (!value || typeof value !== "object") return;
   if ("minItems" in value && value.minItems === 0) delete value.minItems;
@@ -82,7 +82,7 @@ export function createProvider(
       503,
     );
   async function run(prompt: string, current?: GameSpec): Promise<GameSpec> {
-    if (!current && knownUnsupported(prompt))
+    if (knownUnsupported(prompt))
       throw new ProviderError(
         `This engine currently supports ${supportedFamilies}. Those mechanics are not supported yet; choose one of those families rather than receiving an unrelated game.`,
         422,

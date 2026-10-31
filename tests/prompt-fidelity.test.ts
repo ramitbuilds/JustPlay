@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import { createProvider } from "../src/server/providers";
 import { sportsExamples, examples } from "../src/fixtures";
 import { validateSpec } from "../src/spec";
+import { compose } from "../src/game/level";
 const env = { AI_PROVIDER: "groq", GROQ_API_KEY: "test" };
 const response = (spec: unknown) =>
   Response.json({
@@ -174,16 +175,30 @@ it("bounds Groq JSON-decoding failure retries", async () => {
 });
 
 it("grounds sports instructions in actual goals and misses instead of invented rules", async () => {
-  const fetcher = vi
-    .fn()
-    .mockResolvedValue(
-      response({
-        ...sportsExamples[0].spec,
-        description: "Dunk with a full team before the timer runs out.",
-      }),
-    );
+  const fetcher = vi.fn().mockResolvedValue(
+    response({
+      ...sportsExamples[0].spec,
+      description: "Dunk with a full team before the timer runs out.",
+    }),
+  );
   const design = await createProvider(env, fetcher).generateGame("basketball");
   expect(design.description).toContain("10 points");
   expect(design.description).toContain("6 missed shots");
   expect(design.description).not.toMatch(/timer|team|dunk/i);
+});
+
+it("keeps an enemy-free platformer genuinely free of enemies", () => {
+  const spec = validateSpec({ ...examples[0].spec, enemies: [] });
+  expect(compose(spec).enemies).toEqual([]);
+});
+
+it("declines unsupported genre edits without rewriting the current game", async () => {
+  const fetcher = vi.fn();
+  await expect(
+    createProvider(env, fetcher).editGame(
+      sportsExamples[0].spec,
+      "Turn this into a chess game",
+    ),
+  ).rejects.toMatchObject({ status: 422 });
+  expect(fetcher).not.toHaveBeenCalled();
 });

@@ -44,7 +44,7 @@ export function compose(spec: GameSpec): Level {
           enemies.push({ x: x + 120, y: 165, kind: "bat" });
       } else {
         platforms.push({ x, y: 238 - Math.floor(rng() * 2) * 32, w: 100 });
-        if (rng() < 0.8) {
+        if (rng() < 0.8 && spec.enemies.length > 0) {
           const kind = spec.enemies[Math.floor(rng() * spec.enemies.length)];
           enemies.push({ x: x + 100, y: kind === "bat" ? 220 : 295, kind });
         }
