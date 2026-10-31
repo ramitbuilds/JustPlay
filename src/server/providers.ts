@@ -26,7 +26,7 @@ export function createProvider(
   const groq = env.AI_PROVIDER === "groq";
   if (!groq && env.AI_PROVIDER !== "gemma")
     throw new ProviderError(
-      "AI is not configured. Play a local example, or configure a free provider on the server.",
+      "Set AI_PROVIDER to groq or gemma in your hosting environment, then redeploy. Local examples are still available.",
       503,
     );
   const key = groq ? env.GROQ_API_KEY : env.GEMINI_API_KEY;

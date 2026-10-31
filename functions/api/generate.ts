@@ -28,9 +28,11 @@ function json(data: unknown, status = 200) {
 export async function onRequest({
   request,
   env,
+  clientIP,
 }: {
   request: Request;
   env: Env;
+  clientIP?: string;
 }) {
   if (request.method !== "POST")
     return json({ error: "Use POST for generation." }, 405);
@@ -50,7 +52,7 @@ export async function onRequest({
         503,
       );
     const allowed = await env.AI_RATE_LIMITER.limit({
-      key: request.headers.get("CF-Connecting-IP") || "unknown",
+      key: clientIP ?? (request.headers.get("CF-Connecting-IP") || "unknown"),
     });
     if (!allowed.success)
       return json(

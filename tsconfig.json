@@ -17,5 +17,5 @@
     "noUnusedParameters": true,
     "types": ["node", "vite/client"]
   },
-  "include": ["src", "functions", "tests", "*.ts"]
+  "include": ["src", "api", "functions", "tests", "*.ts"]
 }

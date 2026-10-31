@@ -13,7 +13,8 @@
     "preview": "vite preview --host 0.0.0.0",
     "dev:full": "npm run build && wrangler dev",
     "deploy:check": "npm run build && wrangler deploy --dry-run",
-    "format": "prettier --write src functions tests *.ts *.js *.json"
+    "format": "prettier --write src functions tests *.ts *.js *.json",
+    "test:e2e:vercel": "playwright test --config vercel.playwright.config.ts"
   },
   "dependencies": {
     "idb": "^8.0.3",
