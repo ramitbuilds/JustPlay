@@ -56,6 +56,26 @@ const createRules =
 const patchRules =
   contract +
   `\nYou are editing existing source. Preserve unrelated features. Return ONLY JSON matching this patch schema: ${JSON.stringify(z.toJSONSchema(CodePatchSchema))}. Each find string must match exactly once in the current code, with exact whitespace. Replace only necessary source fragments. Metadata fields describe the resulting game. For runtime repair fix the reported error in the existing code. Do not return a canned replacement game.`;
+function parseGoogleStream(raw: string) {
+  let text = "",
+    finishReason: string | undefined;
+  for (const frame of raw.split(/\r?\n\r?\n/)) {
+    const payload = frame
+      .split(/\r?\n/)
+      .filter((line) => line.startsWith("data:"))
+      .map((line) => line.slice(5).trim())
+      .join("\n");
+    if (!payload || payload === "[DONE]") continue;
+    const event = JSON.parse(payload),
+      candidate = event.candidates?.[0];
+    for (const part of candidate?.content?.parts ?? [])
+      if (!part.thought && typeof part.text === "string") text += part.text;
+    if (text.length > 50000)
+      throw Error("The generated source exceeded its response budget.");
+    finishReason = candidate?.finishReason ?? finishReason;
+  }
+  return { candidates: [{ finishReason, content: { parts: [{ text }] } }] };
+}
 export function createProvider(
   env: ProviderEnv,
   fetcher: typeof fetch = fetch,
@@ -143,7 +163,7 @@ export function createProvider(
         );
       const url = groq
         ? "https://api.groq.com/openai/v1/chat/completions"
-        : `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+        : `https://generativelanguage.googleapis.com/v1beta/models/${model}:${attempt ? "streamGenerateContent?alt=sse" : "generateContent"}`;
       const body = groq
         ? {
             model,
@@ -207,7 +227,14 @@ export function createProvider(
               const { done, value } = await reader.read();
               if (done) break;
               bytes += value.byteLength;
-              if (bytes > 350000) {
+              if (
+                bytes >
+                (response.headers
+                  .get("Content-Type")
+                  ?.includes("text/event-stream")
+                  ? 1000000
+                  : 350000)
+              ) {
                 await reader.cancel();
                 throw new ProviderError(
                   "The provider response exceeded the source budget. Try a smaller idea.",
@@ -325,7 +352,11 @@ export function createProvider(
         );
       }
       try {
-        const data = JSON.parse(raw);
+        const data =
+          !groq &&
+          response.headers.get("Content-Type")?.includes("text/event-stream")
+            ? parseGoogleStream(raw)
+            : JSON.parse(raw);
         const text = groq
           ? data.choices?.[0]?.message?.content
           : data.candidates?.[0]?.content?.parts

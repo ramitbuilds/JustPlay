@@ -211,3 +211,33 @@ it("runtime repairs accept complete corrected source rather than fragile patches
     "Space",
   );
 });
+it("recovers using native Google streamed source on the alternate Gemma model", async () => {
+  vi.spyOn(console, "warn").mockImplementation(() => {});
+  const frames = [
+    { candidates: [{ content: { parts: [{ text: source.slice(0, 100) }] } }] },
+    {
+      candidates: [
+        {
+          finishReason: "STOP",
+          content: { parts: [{ text: source.slice(100) }] },
+        },
+      ],
+    },
+  ]
+    .map((frame) => "data: " + JSON.stringify(frame) + "\n\n")
+    .join("");
+  const fetcher = vi
+    .fn()
+    .mockResolvedValueOnce(new Response("", { status: 500 }))
+    .mockResolvedValueOnce(
+      new Response(frames, {
+        headers: { "Content-Type": "text/event-stream" },
+      }),
+    );
+  expect(
+    await createProvider(env, fetcher).generateGame("an original game"),
+  ).toEqual(game);
+  expect(fetcher.mock.calls[1][0]).toContain(
+    "gemma-4-31b-it:streamGenerateContent?alt=sse",
+  );
+});
