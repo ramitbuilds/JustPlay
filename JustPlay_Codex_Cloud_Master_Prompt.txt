@@ -1,0 +1,248 @@
+JUSTPLAY — ONE-SHOT MASTER PROMPT FOR CODEX CLOUD
+Repository: https://github.com/ramitbuilds/JustPlay
+Product name: JustPlay
+Tagline: Describe your game. Play it immediately.
+
+ROLE & OUTCOME
+You are Codex Cloud, acting as an autonomous senior engineering, game-design, research, and product-design team. Work INSIDE the connected GitHub repository ramitbuilds/JustPlay. First investigate Instaplay's publicly observable capabilities and the techniques behind polished AI-generated 2D games; then independently design, implement, test, and prepare a polished JustPlay hackathon submission.
+
+This is an IMPLEMENTATION task, not a request to stop after writing an architecture document or pretty mockup. Prioritize a working, genuinely AI-driven and visually striking product. Continue through research, development, visual QA, and a clean final deliverable within your task's available time and tools. Keep concise progress notes, and keep working rather than repeatedly asking whether to proceed. If a step is blocked, honestly document it and advance independent work.
+
+IMPORTANT: THIS IS CODEX CLOUD, CONTROLLED FROM A PHONE
+- You are running in a remote Codex Cloud environment, NOT on the user's phone or home PC. Do not tell the user to run a Windows PowerShell command, open desktop Chrome, expose localhost from their phone, or manually install a CLI on their phone.
+- First inspect this task's actual repository checkout, permissions, tools, network availability, browser/test capabilities, and existing files. Do not assume a local browser or a CDP endpoint exists.
+- Use the connected GitHub repository as the source of truth. Preserve its existing README, LICENSE, git history, and any user code unless necessary; extend them thoughtfully. The repository was previously minimal, but re-inspect because it may have changed.
+- If the cloud environment lacks internet access to research pages or package registries, use available verified documentation and note the limitation. Do not claim to have inspected pages you could not access.
+- Use the cloud environment's supported browser/Playwright preview when available. Use screenshots and actual test runs to evaluate UI and gameplay.
+- Secrets must be supplied as secure Codex Cloud environment secrets (or later as deployment provider secrets), NOT pasted into the repository or a public commit. If unavailable, build and test the complete engine with clearly labeled offline fixtures and leave the real provider wiring ready.
+- Do not request access to the user's local files, phone browser, or local terminal. Any required user action should be something doable through cloud environment settings or GitHub from mobile, with a precise explanation.
+
+NON-NEGOTIABLE BUDGET RULE
+- Zero additional spending beyond existing Codex access.
+- No subscriptions, paid APIs, paid graphics, premium asset packs, payment-gated infrastructure, credit-card-required services, or billing upgrades.
+- During development, use Groq's available FREE API tier; for final submission use Gemma 4 via the Gemini API's FREE tier if currently eligible.
+- Verify current provider model identifiers, quotas, and prices from official docs. Prefer a capable free Groq model; target gemma-4-26b-a4b-it for final submission if supported. Do not assume past prices/limits are permanent.
+- No auto-billing and no invented promises of unlimited free inference. Handle rate limits and quota exhaustion transparently.
+- All runtime graphics must be produced through free local assets, procedural composition, and the browser renderer. NO paid image generation.
+- Free deployment only where genuinely supported; if deployment credentials are missing, prepare build and exact deployment instructions rather than pretending to have deployed.
+
+GIT RULES — IMPORTANT PERSONAL PREFERENCE
+- Make small, meaningful commits after cohesive milestones whenever commits are supported in this cloud task. Avoid one enormous unreviewable commit.
+- Every commit message MUST be short, simple, plain-English, and lowercase, with no conventional-commit prefixes, no ticket numbers, and no paragraphs.
+- Examples: "setup project", "add game engine", "add pixel assets", "build home page", "redesign ui", "integrate llm api", "add gemma support", "add game editing", "fix game physics", "polish animations", "fix mobile layout", "add tests", "update docs".
+- Prefer 2–5 words. Do not write formal essay-style messages such as "feat(platform): implement comprehensive intelligent generation pipeline".
+- Don't rewrite existing git history, force-push, or push directly to a protected branch. Use the normal Codex Cloud change/PR workflow and repository permissions. If commits or pushes are unavailable, leave reviewable changes and report the blocker. Never commit secrets or huge unwanted generated files.
+
+PHASE 0: INSPECT REPO AND CLOUD CAPABILITIES
+1. Check git status, branch, file tree, README, license, package manager, existing dependencies, scripts, and any AGENTS.md instructions.
+2. Determine which network/browser/CLI/skills tools are genuinely installed and usable in THIS environment.
+3. Check official documentation for any unclear, version-sensitive library/API choices.
+4. Create a short execution plan in docs/PLAN.md, then immediately work through it. Track honest progress, decisions, and blocked items there.
+5. Product name is JUSTPLAY, not PlayASAP. Keep branding consistent.
+
+PHASE 1: RESEARCH INSTAPLAY — BEFORE IMPLEMENTING GENERATION
+Target: https://www.instaplay.ai/
+Research official site and docs, published demos, publicly accessible games, founder/engineering posts, screenshots/video, and relevant open technical references. Investigate the PRODUCT and its generation quality, not just landing-page styling.
+
+Investigate:
+- Prompt-to-game workflow, supported game genres, generation time, creation and editing UX.
+- Whether games appear configuration-driven, template-based, code-generated, or a hybrid; distinguish observation from hypothesis.
+- Publicly observable frontend frameworks and 2D/3D rendering technologies.
+- Asset loading, spritesheets, characters, tilesets, sound, backgrounds, animations, palette consistency, parallax, lighting, particles, camera motion, game feel.
+- Level geometry, collisions, physics, objectives, enemy behaviors, progression, difficulty, win/loss and save/share behavior.
+- Iterative natural-language editing, game reload/version management and visible failure recovery.
+- Why polished retro 2D games look much better than code-only rectangle/circle games.
+- How to reproduce core user-perceived quality INDEPENDENTLY without copying copyrighted code or assets.
+
+REA (REVERSE ENGINEER ANYTHING)
+Official repo: https://github.com/morluto/rea
+Read current upstream instructions. If REA is available in the Codex Cloud environment, use its supported passive public-web or JavaScript analysis capabilities and capture evidence. Do not blindly run local desktop setup commands and assume an MCP server will appear. REA's CDP browser inspection requires a browser/session it can actually attach to; a mobile phone does not supply one to this cloud worker. If a dedicated cloud browser and approved loopback CDP environment are unavailable, DO NOT stall. Use other permitted techniques: public docs, static public JS analysis where feasible, available browser tooling, Playwright and visible behavior. Clearly mark REA as unavailable if it is unavailable.
+
+Stay within public/authorized access. Do not bypass authentication, scrape private data, extract credentials, evade controls, or reproduce proprietary assets/source. Don't claim public bundle inspection reveals private AI model prompts or backend architecture.
+
+Research deliverables:
+- docs/INSTAPLAY_RESEARCH.md: linked sources, observations, confirmed facts, hypotheses, unknowns.
+- docs/REVERSE_ENGINEERING.md: what tools actually ran, evidence, limitations.
+- docs/GRAPHICS_ANALYSIS.md: specific visual/game-feel techniques we can recreate legally for free.
+- docs/ARCHITECTURE.md: reasoned implementation decisions.
+
+Time-box research sensibly. Once you have enough useful evidence, MOVE ON TO BUILDING. Deep reverse engineering is not an excuse to leave the repo as documentation only.
+
+PHASE 2: LOAD DESIGN & ENGINEERING SKILLS
+I explicitly want skill-guided UI and technical work, not an unstyled generic dashboard.
+
+DESIGN RESOURCES
+- Impeccable: https://github.com/pbakaus/impeccable
+- Vercel design.md: https://vercel.com/design.md
+- Vercel's article explaining design.md: https://vercel.com/blog/how-our-agents-build-on-brand-pages-with-design-md
+- Vercel Web Interface Guidelines: https://vercel.com/design/guidelines
+- Vercel agent skills: https://github.com/vercel-labs/agent-skills
+- Skill discovery: https://skills.sh/
+
+Check whether the relevant skills are already installed and available in this Codex environment. Read their current instructions, and use applicable ones (Impeccable's design critique/polish capabilities, Vercel web-design-guidelines, and other reputable frontend, accessibility, security, testing, TypeScript, Phaser, and performance skills). Install verified free skills only if necessary, supported, safe, and compatible with cloud permissions. No installation is valuable unless you actually APPLY the skill. If a skill requires a restart or unavailable integration, read its accessible source/guidelines and continue; do not falsely report activation.
+
+Create DESIGN.md as the project's OWN design system. Vercel documentation is design guidance, not permission to clone Vercel branding. Develop JustPlay's unique, playful but premium identity, typography, color system, spacing, motion system, components, states, responsive rules, accessibility and visual anti-patterns.
+
+Visual standards:
+- Carefully composed, expressive, polished, modern creative studio.
+- Excellent hierarchy and purposeful white space; distinctive but usable interface.
+- Avoid generic purple-blue AI gradients, random glassmorphism, endless cards, emoji navigation, tacky glowing buttons, and bland template-like dashboards.
+- Visually interesting game previews are a real part of the product, not fake examples presented as outputs.
+- Responsive layout for mobile and desktop; keyboard accessibility, focus styles, color contrast, reduced motion, touch targets, empty/loading/error states.
+- Use screenshots and iterative critique to improve the implementation, not only code review.
+
+PHASE 3: BUILD THE PRODUCT — RECOMMENDED STACK
+Prefer:
+- Vite + React + TypeScript
+- Tailwind CSS
+- Phaser for actual 2D game rendering
+- Zod for runtime GameSpec validation
+- IndexedDB for locally stored games and versions
+- Small secure serverless API proxy (Cloudflare Pages Functions / Workers free tier if appropriate)
+- Groq free inference during development, Gemma 4 through Gemini API for final submission
+- Free licensed pixel-art asset packs and procedural variations
+- Playwright for browser testing, plus suitable unit/integration tools
+
+If research yields a substantially better FREE stack, document the tradeoffs and proceed. Do not overengineer or add a paid database, auth, server or large infrastructure dependency without a concrete requirement.
+
+PRODUCT SCREENS
+1. Landing page: memorable JustPlay branding, strong hero, large prompt composer, example game ideas, polished interactions, clear create CTA and genuine labeled previews.
+2. Generation: honest states such as designing mechanics, validating game, composing level and loading assets; do not fake a completed AI request or fake precise backend progress.
+3. Studio: prominent playable canvas, conversational editing input, generation history/versions, restart/fullscreen/save, contextual game details.
+4. Gallery: games saved in IndexedDB, previews/metadata where supported, open/play/edit/delete with proper states.
+5. Player: smooth loading, controls instructions, game-over and victory screens, adaptive display sizing, keyboard and touch controls as applicable.
+
+FUNCTIONAL REQUIREMENT: DO NOT FAKE GAME GENERATION
+Different prompts must yield meaningfully different playable experiences. It is okay and desirable to support a constrained, reliable design space rather than pretending to generate arbitrary AAA games.
+
+Start with 3 real game families:
+- Side-scrolling platformer
+- Top-down action/adventure/survival
+- Endless runner
+
+Build reusable modules for:
+- player movement and physics
+- animation and game state
+- enemy patrol/chase/attack and hazards
+- collisions and damage
+- health, scoring, collectibles and power-ups
+- projectiles, double jump, dash and checkpoints where applicable
+- win/loss objectives and game restart
+- camera, parallax, particles, transitions, sound feedback
+- responsive controls and appropriate game pacing
+- level generation with seeded deterministic placement and feasibility constraints
+
+Games should vary by objective, difficulty, enemy composition, mechanics, movement, map layout, visual theme and asset selections. Never just swap title and background color on one canned game. Ensure levels can actually be completed; avoid impossible jumps and inaccessible collectibles.
+
+AI -> GAMESPEC -> VALIDATED RUNTIME
+1. User submits a natural-language request.
+2. AI receives STRICT schema description, valid genres, mechanics and asset IDs.
+3. AI returns structured GameSpec JSON, not arbitrarily executable JavaScript.
+4. Zod and semantic checks validate schema, bounds, feasible objectives, asset references and mechanics.
+5. Allow bounded parsing/repair attempts with clear errors on failure.
+6. Deterministic level composer converts GameSpec into runtime content.
+7. Phaser loads only validated local assets and builds the playable game.
+8. On edits, AI receives current GameSpec plus requested changes, returns a revised validated spec, preserving unrelated features.
+9. Save versioned games in IndexedDB; provide basic local export/import or encoded shareable GameSpec if feasible and within practical size limits.
+
+Keep user-supplied prompts/data separate from system instructions and apply strict JSON boundaries. Do not execute AI-generated JS in the app's primary origin. If you later attempt sandboxed code-generation, it must be genuinely isolated, tested and optional; the stable GameSpec engine is the MVP.
+
+GRAPHICS: THE MOST IMPORTANT QUALITY BAR
+Do not make final games from ugly placeholder rectangles/circles. Use stylistically compatible, legally reusable pixel art (Kenney: https://kenney.nl/assets ; OpenGameArt: https://opengameart.org/ , checking specific pack licenses). Prefer CC0. Preserve provenance in docs/ASSET_LICENSES.md. Do not silently download protected brand sprites or rip Mario assets.
+
+Build a real asset pipeline:
+- catalog of spritesheets with correct animation frame metadata
+- tilesets with compatible resolution and coherent art direction
+- background layers for parallax
+- animated sprites, coins, enemies, environment decorations
+- matching HUD elements and readable pixel fonts when licensed
+- lightweight sound effects with legal sources
+- asset manifest with real paths and fallbacks; AI selects identifiers, not invented filenames
+- crisp nearest-neighbor rendering and correct camera scaling
+- palette transformations, composition variation, subtle lighting/weather/particles and excellent hit/jump feedback
+
+Use curated themes: e.g. enchanted forest, crystal cave, lava ruins, neon city, eerie dungeon, as assets actually permit. A professional-looking cohesive game is better than ten inconsistent styles. No real-time AI image generation required. Browser gameplay should be completely local after assets load.
+
+GROQ & GEMMA — SWITCHABLE PROVIDERS
+Implement one interface, two separate adapters, and shared schemas/tests:
+
+interface AIProvider {
+  generateGame(prompt: string): Promise<GameSpec>;
+  editGame(current: GameSpec, instruction: string): Promise<GameSpec>;
+}
+
+Development env example:
+AI_PROVIDER=groq
+GROQ_API_KEY=
+GROQ_MODEL=
+
+Submission env example:
+AI_PROVIDER=gemma
+GEMINI_API_KEY=
+GEMMA_MODEL=gemma-4-26b-a4b-it
+
+Select valid models based on official current API docs. Implement each provider using its actual supported request/response format. Gemma through Gemini API is not automatically interchangeable with Groq just by changing a string. If structured-output or thinking configuration isn't supported by a given endpoint, use a verified alternative and robust validator. Test with actual free API credentials when available; otherwise use a clearly labeled local fixture provider for tests only, and keep production AI requests disabled until configured. All API keys and proxy credentials remain server-side; never expose them in client JS or commit them.
+
+FREE DEPLOYMENT & SECURITY
+- Prepare Cloudflare-compatible static deployment + secure function proxy if viable without a credit card.
+- Deploy only when the environment has authorization and credentials; otherwise provide exact steps and verify production build locally.
+- Implement practical server-side request bounds and abuse prevention within free-tier limits. Don't mistake client-only throttling for security.
+- Add clear quota exceeded, missing credentials, network failure and timeout states.
+- Never claim unlimited generations or zero-cost operation independent of provider free quotas.
+- Use IndexedDB, static hosting, and lightweight client runtime; avoid paid database and mandatory sign-up.
+
+PHASE 4: TEST, REPAIR, POLISH
+Use automated tests and actual interactive browser sessions/screenshot analysis when supported by the cloud environment. Test at least these three creation requests:
+A. A fox collecting crystals in a lush magical forest platformer with enemies.
+B. A neon cyberpunk endless runner with obstacles and increasing speed.
+C. A top-down dungeon survival game with enemies, health and a win objective.
+
+Require three meaningfully different playable games. For each test inputs, collisions, animation, spawn placement, level viability, goal completion, lose state, restart, sound, asset loading, and no critical console errors.
+
+Then test live AI edits (or marked fixtures when credentials unavailable): "make it harder", "add flying enemies", "change to nighttime", "give me a double jump". Verify changes affect gameplay and preserve unrelated data. Also test invalid JSON, unknown sprite IDs, unsupported mechanics, rate limits, timeout, missing key, corrupted saved games and mobile/responsive layouts.
+
+Run Impeccable critique/polish and Vercel web-design-guidelines review, or apply their published rules when skill tools are unavailable. Inspect screenshots of homepage, studio, actual generated games, gallery and mobile layout. Fix obvious UI and gameplay defects rather than only reporting them. Run lint/typecheck/build/test scripts and summarize which actually passed. Don't claim coverage from tests not run.
+
+EXECUTION ORDER / KEEP MOVING
+1. Inspect JustPlay repo and Codex Cloud tools; create a short plan.
+2. Research Instaplay and attempt permitted REA investigation if the actual cloud environment supports it.
+3. Read/apply Impeccable, design.md, Vercel web design guidelines, and useful verified other skills.
+4. Define GameSpec, game runtime architecture and original JustPlay design system.
+5. Build a fully playable engine with polished sample games that work OFFLINE.
+6. Connect Groq free API and real prompt-to-game generation.
+7. Add natural-language editing and IndexedDB saves.
+8. Integrate/test Gemma 4 as the final target model.
+9. Refine artwork, controls, motion, responsiveness and accessibility.
+10. Test, fix, create small commits, and prepare deployment/PR.
+
+Create only useful documentation, keeping it accurate:
+- README.md (setup, screenshots if available, supported features)
+- AGENTS.md (persistent project constraints incl. short git messages)
+- PRODUCT.md and DESIGN.md
+- docs/PLAN.md
+- docs/INSTAPLAY_RESEARCH.md
+- docs/REVERSE_ENGINEERING.md
+- docs/GRAPHICS_ANALYSIS.md
+- docs/ARCHITECTURE.md
+- docs/AI_PIPELINE.md
+- docs/ASSET_LICENSES.md
+- docs/TEST_RESULTS.md
+- docs/DEPLOYMENT.md
+- docs/KNOWN_LIMITATIONS.md
+- .env.example (placeholders only)
+
+ACCEPTANCE CRITERIA
+Success means a visitor can enter a prompt, get a real AI-designed validated GameSpec when credentials are configured, play a visually polished 2D game, edit mechanics via another prompt, restart, and save/reopen their game. At least three game families and multiple coherent visual themes must work. Final model adapter must support Gemma 4. Entire solution must use free software/assets and available free API/service tiers without new spending.
+
+If an acceptance criterion is impossible in the task's environment, be honest and deliver the strongest functioning partial implementation rather than a fake demo or a list of instructions. Never confuse a mock preview with a working product.
+
+FINAL REPORT (BRIEF, USEFUL FOR MOBILE)
+At the end, provide:
+- what actually works, with links to relevant repo changes/PR if available
+- commits created (short names)
+- tests/builds run and their results
+- research findings vs uncertain guesses
+- any unavailable cloud tools, REA steps, skills, API keys or deployment blockers
+- at most a few exact mobile-friendly actions needed from me, if truly necessary
+
+BEGIN NOW. Inspect https://github.com/ramitbuilds/JustPlay in the current workspace, then research, build, test and polish JustPlay. Do not stop after research or write only a plan.
