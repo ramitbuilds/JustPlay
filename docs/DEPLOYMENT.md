@@ -1,8 +1,32 @@
 # Free deployment
 
-No public deployment was made. This cloud environment has no Cloudflare token/account binding or inference keys. The build and Worker deployment dry run were validated locally.
+The initial task prepared Cloudflare deployment. The user subsequently deployed to Vercel and supplied keys there. Both hosting adapters are now supported; Vercel steps come first. This workspace has no inference keys or hosting CLI credentials.
 
-## Mobile-friendly path
+## Vercel (current deployment)
+
+The root `api/generate.ts` is a native Vercel Node.js Web Standard function. Vercel does not execute `functions/api/generate.ts` or read `wrangler.jsonc`. A frontend-only deployment therefore returned 404 at `/api/generate` even with provider keys configured. The Vercel entry now reuses the shared validated handler and reads secrets only on the server.
+
+In **Vercel → Project → Settings → Environment Variables**, set these for **Production** (and Preview if you use preview deployments), then redeploy the latest `main` commit:
+
+| Name             | Groq                      | Gemma / Gemini API              |
+| ---------------- | ------------------------- | ------------------------------- |
+| `AI_PROVIDER`    | `groq`                    | `gemma`                         |
+| `GROQ_API_KEY`   | Your Groq key (sensitive) | Not needed                      |
+| `GROQ_MODEL`     | `llama-3.3-70b-versatile` | Not needed                      |
+| `GEMINI_API_KEY` | Not needed                | Your Gemini API key (sensitive) |
+| `GEMMA_MODEL`    | Not needed                | `gemma-4-26b-a4b-it`            |
+
+If exactly one provider key exists, the adapter can infer the provider when `AI_PROVIDER` is unset. With both keys present, set `AI_PROVIDER` explicitly. No `VITE_` key and no Cloudflare `AI_RATE_LIMITER` variable are needed on Vercel.
+
+The included `vercel.json` sets **Vite**, build command `npm run build`, output directory `dist`, security headers and a 60-second function duration. Project Root Directory must be the repository root (leave it blank), because the native function lives in root `api/`. Remove any dashboard catch-all rewrite that redirects `/api/*` to `index.html`. Production Branch must be `main`; the user's project already has a Git integration, so pushing main should start deployment. No paid Vercel add-on or database is required.
+
+The Vercel adapter supplies a bounded in-memory server limiter: 5 requests/minute per IP and 30/minute in total per warm instance. Counters reset on cold starts and are not shared across instances. For edge enforcement, Vercel's current [WAF rate limiting](https://vercel.com/docs/vercel-firewall/vercel-waf/rate-limiting) supports one rule on Hobby: configure path `/api/generate`, POST, 5 requests per 60 seconds per IP, then publish the rule. This is optional extra protection, not an environment binding. Its counters are regional; provider free quotas remain the final usage boundary. Keep inference billing disabled and verify free model eligibility before use.
+
+A browser create request should return JSON. Opening `/api/generate` directly sends GET and should return **405 JSON** ("Use POST for generation."); **404** indicates an old deployment, wrong root/branch or missing function. JSON **503** identifies missing provider configuration. Requests must come from the same origin. Redeploy after changing environment variables; existing builds do not acquire new values automatically.
+
+`npm run test:e2e:vercel` exercises the real function over a local HTTP bridge with mocked upstream inference, including three game families and editing. This does not claim a real Vercel build or live AI request. Live verification is recorded separately in TEST_RESULTS.
+
+## Cloudflare mobile-friendly path
 
 1. Review and merge the JustPlay PR on GitHub when ready.
 2. In Cloudflare's dashboard, select **Workers & Pages → Create → Import a repository**, connect `ramitbuilds/JustPlay` and use the reviewed branch. Choose Workers **Free**, with no paid subscription or billing upgrade. Build command: `npm ci && npm run build`; deploy command: `npx wrangler deploy`. Keep `wrangler.jsonc` as the configuration. If account setup requires a paid plan/card in your region, stop; do not upgrade.

@@ -17,6 +17,10 @@ Describe your game in a few words and AI generates a professional 2D game in sec
 
 **No live AI or deployment is claimed.** The task environment supplied no keys. Authored local examples and their four deterministic edit suggestions are explicitly labeled; arbitrary prompts use the real server proxy and fail honestly if it is not configured.
 
+## Deploy on Vercel
+
+Deploy the repository root on the Vite preset using the included `vercel.json`; `api/generate.ts` runs the AI proxy on Vercel. Add `AI_PROVIDER=groq`, `GROQ_API_KEY` and optionally `GROQ_MODEL=llama-3.3-70b-versatile` as server-only Production variables, then redeploy. Gemma is also supported. See [exact deployment steps](docs/DEPLOYMENT.md#vercel-current-deployment). `wrangler.jsonc` variables apply only to Cloudflare.
+
 ## Run in a development/cloud workspace
 
 ```sh

@@ -26,3 +26,7 @@ Browser QA found and repaired Phaser startup timing, keyboard capture, touch foc
 - Public deployment: no Cloudflare account credentials.
 - Groq quotas/pricing: official console docs returned 403; verify Free plan before enabling.
 - REA MCP and competitor authenticated generation unavailable.
+
+## Vercel follow-up
+
+The user deployed to Vercel, reported a missing API, and authorized working directly on main. Added the native Vercel function, host-specific server environment/limiter, security/build configuration and actionable accessible failures. Verified 40 unit/integration and 12 browser tests (10 existing + 2 native HTTP adapter). The supplied corrected production URL is https://justplay-olive-eta.vercel.app/; baseline API returned 404. Live verification will follow the main push.

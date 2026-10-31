@@ -13,3 +13,7 @@ Shared Zod validation checks bounds, enums, strict field sets, unique enemies an
 - Groq `llama-3.3-70b-versatile` is present in the [official TypeScript SDK](https://github.com/groq/groq-typescript/blob/main/src/resources/chat/completions.ts). [Model docs](https://console.groq.com/docs/models) and [rate limits](https://console.groq.com/docs/rate-limits) returned 403 in this worker. Current Groq pricing/quotas could not be verified here. The operator must confirm the selected model is eligible on their Free plan before enabling Groq. Never attach billing for this project.
 
 The allowlist rejects arbitrary paid-model identifiers. It cannot inspect billing settings; use only an eligible free project/account. No provider request was sent during this task. Adapter tests use mocked HTTP responses, and offline examples are authored fixtures, never a silent generation fallback.
+
+## Hosting adapters
+
+Cloudflare routes to the shared handler via `worker.ts` or the Pages entry. Vercel discovers root `api/generate.ts`, uses its Web Standard fetch export and supplies server environment variables plus its own bounded limiter. The shared handler accepts an explicit host-derived client IP; Vercel never trusts a caller-supplied Cloudflare IP header. Native function duration is 60 seconds; each provider attempt remains bounded to 18 seconds and the browser to 45 seconds.

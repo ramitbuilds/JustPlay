@@ -34,3 +34,15 @@ Some early development runs failed and drove those repairs. A later survival ass
 ## Limits of the evidence
 
 No live provider key, remote deployment, physical phone, Safari, Firefox or screen-reader session was available. Current Groq pricing/quota pages returned 403. Build emits the expected lazy Phaser chunk-size warning and two upstream Zod annotation warnings. See [known limitations](KNOWN_LIMITATIONS.md) and [AI model evidence](AI_PIPELINE.md).
+
+## Vercel compatibility regression
+
+- `npm test`: **40 passed** across core and Vercel regression files.
+- Existing Chromium suite: **10 passed**, including all three playable families and the updated missing-route behavior.
+- `npm run test:e2e:vercel`: **2 passed**, exercising browser requests through the actual native function over a local HTTP bridge, all three creation families, a versioned edit, and method/origin guards. Only upstream model HTTP responses are mocked.
+- Focus/inline-error regression: the missing-route test additionally checks aria-invalid, aria-describedby, prompt retention, focus restoration and no mobile overflow; desktop/mobile error screenshots captured.
+- Typecheck, lint and production build passed. Existing Phaser/Zod warnings remain unchanged.
+- No new dependencies or paid services. The Vercel limiter is tested for per-IP limits, window expiry, aggregate ceilings, capacity bounds and ignored spoofed Cloudflare headers.
+- Read Vercel's official design.md and published Web Interface Guidelines. Applied inline actionable errors and accessible focus/announcement behavior to the existing JustPlay design. The requested getdesign.md source was absent locally and returned HTTP 403 online; see VERCEL_FIX.md for exact source links.
+
+Production baseline: `https://justplay-olive-eta.vercel.app/` served JustPlay but GET `/api/generate` returned **404** before this fix. Deployment verification follows the push to main; no live inference result is claimed by these local tests.
