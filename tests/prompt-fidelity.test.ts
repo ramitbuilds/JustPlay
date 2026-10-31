@@ -57,7 +57,7 @@ describe("generated source boundary", () => {
     expect(next.code).toContain("const color='$&';");
   });
 });
-it("new artifacts reject fake pointer buttons and uncovered actions", () => {
+it("new artifacts reject fake pointer buttons and require a renderer", () => {
   expect(() =>
     validateCodeGame({
       ...game,
@@ -67,12 +67,9 @@ it("new artifacts reject fake pointer buttons and uncovered actions", () => {
   expect(() =>
     validateCodeGame({
       ...game,
-      controls: [
-        { label: "Paint", key: "Space" },
-        { label: "Unused", key: "KeyX" },
-      ],
+      renderer: undefined,
     }),
-  ).toThrow("Missing input verification");
+  ).toThrow("require a renderer");
 });
 it("source patches preserve asset and input-test metadata when omitted", () => {
   const partial = { ...patch };

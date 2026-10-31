@@ -279,38 +279,90 @@ scope.justplayBoot = (factory) => {
         throw Error("The game renders a blank or nearly uniform screen.");
       if (!hud.status || !hud.stats.length)
         throw Error("Show an objective and live numeric HUD statistics.");
-      const checks = manifest.verification ?? [];
-      for (const check of checks) {
-        post({ type: "beat", frames });
-        const baseline = runScenario(check, true),
-          active = runScenario(check, false);
-        let stateChanged = false,
-          feedbackChanged = false;
-        for (let i = 0; i < Math.max(baseline.length, active.length); i++) {
-          const a = baseline[Math.min(i, baseline.length - 1)],
-            b = active[Math.min(i, active.length - 1)],
-            x = a.state.metrics[check.metric],
-            y = b.state.metrics[check.metric];
-          if (!Number.isFinite(x) || !Number.isFinite(y))
-            throw Error(
-              `Input check ${check.name}: inspect().metrics.${check.metric} is missing.`,
-            );
-          if (Math.abs(x - y) >= 0.0001) {
-            stateChanged = true;
-            if (a.visual.hash !== b.visual.hash || a.hud !== b.hud)
-              feedbackChanged = true;
+      const controls = manifest.controls.length
+        ? manifest.controls.map((control) => control.key)
+        : ["pointer"];
+      let checked = 0;
+      for (const control of controls) {
+        const hints = (manifest.verification ?? []).filter(
+          (check) => check.control === control,
+        );
+        const candidates: NonNullable<CodeGame["verification"]> = [...hints];
+        if (control === "pointer") {
+          for (const x of [400, 200, 600])
+            for (const y of [225, 120, 330])
+              candidates.push({
+                name: "Pointer interaction",
+                control,
+                metric: "",
+                steps: [
+                  { frames: 90, keys: [], pointer: { x, y, down: true } },
+                ],
+              });
+        } else {
+          const contexts = [
+            [],
+            ...controls
+              .filter((key) => key !== control && key !== "pointer")
+              .map((key) => [key]),
+          ];
+          for (const context of contexts) {
+            candidates.push({
+              name: control,
+              control,
+              metric: "",
+              steps: [
+                { frames: 45, keys: context },
+                { frames: 90, keys: [...context, control] },
+              ],
+            });
+            if (context.length)
+              candidates.push({
+                name: control,
+                control,
+                metric: "",
+                steps: [
+                  { frames: 60, keys: context },
+                  { frames: 90, keys: [control] },
+                ],
+              });
           }
         }
-        if (!stateChanged)
+        let works = false;
+        for (const check of candidates) {
+          post({ type: "beat", frames });
+          const baseline = runScenario(check, true),
+            active = runScenario(check, false);
+          for (let i = 0; i < Math.max(baseline.length, active.length); i++) {
+            const a = baseline[Math.min(i, baseline.length - 1)],
+              b = active[Math.min(i, active.length - 1)];
+            const metrics = check.metric
+              ? [check.metric]
+              : Object.keys(a.state.metrics);
+            const changed = metrics.some(
+              (metric) =>
+                Number.isFinite(a.state.metrics[metric]) &&
+                Number.isFinite(b.state.metrics[metric]) &&
+                Math.abs(a.state.metrics[metric] - b.state.metrics[metric]) >=
+                  0.0001,
+            );
+            if (
+              changed &&
+              (a.visual.hash !== b.visual.hash || a.hud !== b.hud)
+            ) {
+              works = true;
+              break;
+            }
+          }
+          if (works) break;
+        }
+        if (!works)
           throw Error(
-            `Input check ${check.name} failed: ${check.control} did not change ${check.metric} compared with the same simulation without that input.`,
+            `Control ${control} did not change actual gameplay with visible/HUD feedback, either alone, held with another action, or after movement. Fix its input handling and expose actual gameplay metrics through inspect().`,
           );
-        if (!feedbackChanged)
-          throw Error(
-            `Input check ${check.name}: state changed but there is no visible or HUD feedback.`,
-          );
+        checked++;
       }
-      post({ type: "verified", checks: checks.length });
+      post({ type: "verified", checks: checked });
     } finally {
       Math.random = originalRandom;
       testing = false;

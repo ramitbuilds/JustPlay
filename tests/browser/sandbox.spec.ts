@@ -128,7 +128,7 @@ test("rejects a decorative button that never changes actual game state", async (
       return String(error);
     }
   }, broken);
-  expect(result).toContain("KeyA did not change lane");
+  expect(result).toContain("KeyA did not change actual gameplay");
 });
 test("accepts a real one-shot action even when it returns to its original state", async ({
   page,

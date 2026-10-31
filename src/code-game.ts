@@ -109,29 +109,7 @@ export function validateCodeGame(raw: unknown): CodeGame {
       throw Error(
         "Use actual KeyboardEvent.code controls; pointer games use an empty controls array.",
       );
-    if (!game.renderer || !game.verification?.length)
-      throw Error(
-        "New games require a renderer and input verification scenarios.",
-      );
-    for (const control of game.controls)
-      if (
-        !game.verification.some(
-          (check) =>
-            check.control === control.key &&
-            check.steps.some((step) => step.keys.includes(control.key)),
-        )
-      )
-        throw Error(
-          `Missing input verification for ${control.label} (${control.key}).`,
-        );
-    for (const check of game.verification)
-      if (
-        check.control !== "pointer" &&
-        !game.controls.some((control) => control.key === check.control)
-      )
-        throw Error(
-          "Verification must name an actual declared control or pointer.",
-        );
+    if (!game.renderer) throw Error("New games require a renderer.");
   }
   return game;
 }
