@@ -76,7 +76,7 @@ export function createProvider(
       `The server is missing ${groq ? "GROQ_API_KEY" : "GEMINI_API_KEY"}. Add it to Production environment variables, then redeploy.`,
       503,
     );
-  const model = groq
+  let model = groq
     ? !env.GROQ_MODEL || env.GROQ_MODEL === "llama-3.3-70b-versatile"
       ? "openai/gpt-oss-20b"
       : env.GROQ_MODEL
@@ -104,6 +104,7 @@ export function createProvider(
     const started = Date.now();
     const name = groq ? "Groq" : "Google Gemma";
     for (let attempt = 0; attempt < 2; attempt++) {
+      trace.model = model;
       const remaining = GENERATION_BUDGET_MS - (Date.now() - started);
       if (remaining < 1000)
         throw new ProviderError(
@@ -247,7 +248,14 @@ export function createProvider(
           requestId: trace.requestId,
           elapsedMs: Date.now() - started,
         });
-        if (attempt === 0) continue;
+        if (attempt === 0) {
+          if (!groq)
+            model =
+              model === "gemma-4-26b-a4b-it"
+                ? "gemma-4-31b-it"
+                : "gemma-4-26b-a4b-it";
+          continue;
+        }
         throw new ProviderError(
           `${name} is temporarily unavailable (HTTP ${response.status}) after a retry. Please try again shortly.`,
           503,

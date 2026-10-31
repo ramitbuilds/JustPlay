@@ -61,6 +61,7 @@ describe("generation time budget and transport", () => {
       await createProvider(env, fetcher).generateGame("my unusual idea"),
     ).toEqual(game);
     expect(fetcher).toHaveBeenCalledTimes(2);
+    expect(fetcher.mock.calls[1][0]).toContain("gemma-4-31b-it");
     expect(JSON.parse(fetcher.mock.calls[0][1].body)).toEqual(
       JSON.parse(fetcher.mock.calls[1][1].body),
     );
