@@ -1,13 +1,31 @@
 import { openDB } from "idb";
 import { z } from "zod";
 import { GameSpecSchema, validateSpec, type GameSpec } from "./spec";
+import {
+  CodeGameSchema,
+  isCodeGame,
+  validateCodeGame,
+  type CodeGame,
+} from "./code-game";
+export type PlayableGame = CodeGame | GameSpec;
+export function validatePlayable(value: unknown): PlayableGame {
+  return isCodeGame(value) ? validateCodeGame(value) : validateSpec(value);
+}
 export const recordSchema = z
   .object({
     id: z.string().uuid(),
     updated: z.number(),
-    versions: z.array(GameSpecSchema).min(1).max(30),
+    versions: z
+      .array(z.union([CodeGameSchema, GameSpecSchema]))
+      .min(1)
+      .max(30),
     source: z.enum(["ai", "example"]),
-    prompt: z.string().max(2000),
+    prompt: z.string().max(6000),
+    thumbnail: z
+      .string()
+      .max(180000)
+      .regex(/^data:image\/png;base64,[A-Za-z0-9+/=]+$/)
+      .optional(),
   })
   .strict();
 export type SavedGame = z.infer<typeof recordSchema>;
@@ -27,7 +45,7 @@ export async function listGames(): Promise<{
   for (const value of values) {
     try {
       const record = recordSchema.parse(value);
-      record.versions.forEach(validateSpec);
+      record.versions.forEach(validatePlayable);
       games.push(record);
     } catch {
       corrupt++;
@@ -37,14 +55,14 @@ export async function listGames(): Promise<{
 }
 export async function saveGame(game: SavedGame) {
   const parsed = recordSchema.parse(game);
-  parsed.versions.forEach(validateSpec);
+  parsed.versions.forEach(validatePlayable);
   await (await db()).put("games", parsed);
 }
 export async function deleteGame(id: string) {
   await (await db()).delete("games", id);
 }
-export async function importGame(file: File): Promise<GameSpec> {
-  if (file.size > 16000)
-    throw new Error("Choose a JustPlay JSON file smaller than 16 KB.");
-  return validateSpec(JSON.parse(await file.text()));
+export async function importGame(file: File): Promise<PlayableGame> {
+  if (file.size > 100000)
+    throw new Error("Choose a JustPlay JSON file smaller than 100 KB.");
+  return validatePlayable(JSON.parse(await file.text()));
 }

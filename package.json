@@ -18,6 +18,7 @@
     "check:vercel": "tsc -p tsconfig.vercel.json && node scripts/check-vercel.mjs"
   },
   "dependencies": {
+    "acorn": "^8.19.0",
     "idb": "^8.0.3",
     "lucide-react": "^0.468.0",
     "phaser": "^3.90.0",

@@ -22,7 +22,7 @@ try {
     body: JSON.stringify({ prompt: "A forest game" }),
   });
   assert.equal(missing.status, 503);
-  assert.match((await missing.json()).error, /missing its AI key/);
+  assert.match((await missing.json()).error, /missing GROQ_API_KEY/);
   const blocked = await fetch(base + "/api/generate", {
     method: "POST",
     headers: {

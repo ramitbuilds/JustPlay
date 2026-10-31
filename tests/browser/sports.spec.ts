@@ -116,37 +116,6 @@ test("cricket missed deliveries cost wickets and can lose", async ({
   );
   expect(await page.evaluate(() => window.runtime.scene.status.health)).toBe(0);
 });
-test("mobile sports controls charge a shot and fit the viewport", async ({
-  page,
-}) => {
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/");
-  await page
-    .getByRole("button", { name: "Play Court Craft", exact: true })
-    .click();
-  await page.getByRole("button", { name: "Play game", exact: true }).click();
-  const button = page.getByRole("button", { name: "charge shot", exact: true });
-  await expect(button).toBeVisible();
-  const box = await button.boundingBox();
-  if (!box) throw new Error("Missing shot control");
-  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-  await page.mouse.down();
-  await page.waitForTimeout(300);
-  expect(
-    await page
-      .getByRole("meter", { name: "Shot power" })
-      .evaluate((e) => (e as HTMLMeterElement).value),
-  ).toBeGreaterThan(0);
-  await page.mouse.up();
-  await page.screenshot({
-    path: "docs/screenshots/basketball-mobile.png",
-    fullPage: true,
-  });
-  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(
-    390,
-  );
-});
-
 test("basketball green-band assistance works at the lowest aim angle", async ({
   page,
 }) => {

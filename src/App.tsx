@@ -17,8 +17,9 @@ import {
   X,
   WandSparkles,
 } from "lucide-react";
-import { examples, sportsExamples, editFixture } from "./fixtures";
-import { type GameSpec } from "./spec";
+import { isCodeGame, type CodeGame } from "./code-game";
+import { probeGame } from "./sandbox";
+import CodePlayer from "./CodePlayer";
 import { requestGame } from "./api";
 import {
   deleteGame,
@@ -26,58 +27,23 @@ import {
   listGames,
   saveGame,
   type SavedGame,
+  type PlayableGame,
 } from "./storage";
 import GamePlayer from "./GamePlayer";
-const genreLabel = {
-  platformer: "Platformer",
-  runner: "Endless runner",
-  survival: "Survival",
-  basketball: "Basketball shootout",
-  cricket: "Cricket batting",
-};
-const showcasedGames = [...examples, ...sportsExamples];
 type Session = {
   id: string;
-  versions: GameSpec[];
+  versions: PlayableGame[];
   source: "ai" | "example";
   prompt: string;
   index: number;
+  thumbnail?: string;
 };
-function World({ spec, large = false }: { spec: GameSpec; large?: boolean }) {
-  return (
-    <div
-      className={`world-art ${spec.theme} ${spec.genre === "basketball" || spec.genre === "cricket" ? "sports" : ""} ${spec.genre === "survival" ? "arena" : ""} ${large ? "large" : ""}`}
-      style={{ backgroundImage: `url(/assets/${spec.theme}.svg)` }}
-      aria-hidden="true"
-    >
-      <div className="world-ground" />
-      <span className={`sprite ${spec.hero}`} />
-      <span className="crystal c1" />
-      <span className="crystal c2" />
-      <span className="crystal c3" />
-      <span className="world-platform" />
-      <span className="world-portal" />
-      {(spec.genre === "basketball" || spec.genre === "cricket") && (
-        <>
-          <span className={`sport-prop ${spec.genre}`} />
-          <span className="sport-ball" />
-        </>
-      )}
-      {spec.genre === "survival" && (
-        <>
-          <span className="sprite slime enemy-preview" />
-          <span className="sprite bat enemy-preview flying" />
-        </>
-      )}
-      {spec.theme === "forest" && (
-        <>
-          <span className="tree t1" />
-          <span className="tree t2" />
-        </>
-      )}
-    </div>
-  );
-}
+const ideas = [
+  "A pinball table inside a greenhouse, with flower bumpers and a bee-shaped ball",
+  "A chess puzzle about escaping a maze of moving pieces",
+  "A cricket fielding game where I catch high balls",
+  "A taxi game where I pick up passengers in a rainy town",
+];
 function App() {
   const [route, setRoute] = useState(location.hash.slice(1) || "home"),
     [prompt, setPrompt] = useState(""),
@@ -94,12 +60,17 @@ function App() {
     [games, setGames] = useState<SavedGame[]>([]),
     [corrupt, setCorrupt] = useState(0),
     [saved, setSaved] = useState(false),
+    [runtimeError, setRuntimeError] = useState(""),
+    [showCode, setShowCode] = useState(false),
     [deleting, setDeleting] = useState<string | null>(null);
   const composer = useRef<HTMLTextAreaElement>(null),
     editInput = useRef<HTMLTextAreaElement>(null),
     fileInput = useRef<HTMLInputElement>(null),
     title = useRef<HTMLHeadingElement>(null);
   const spec = session?.versions[session.index];
+  useEffect(() => {
+    setRuntimeError("");
+  }, [spec]);
   useEffect(() => {
     const change = () => {
       setRoute(location.hash.slice(1) || "home");
@@ -143,19 +114,21 @@ function App() {
       );
     }
   }
-  function openExample(i: number) {
-    const e = showcasedGames[i];
-    setSession({
-      id: crypto.randomUUID(),
-      versions: [structuredClone(e.spec)],
-      index: 0,
-      source: "example",
-      prompt: e.prompt,
-    });
-    setSaved(false);
-    setNotice("");
-    setError("");
-    location.hash = "studio";
+  async function checkAndRepair(game: CodeGame) {
+    setPhase("Checking the generated game…");
+    try {
+      await probeGame(game);
+      return game;
+    } catch (failure) {
+      setPhase("Asking AI to repair a startup error…");
+      const repaired = await requestGame(
+        "Repair the runtime failure while preserving this game's intended rules and artwork.",
+        game,
+        failure instanceof Error ? failure.message : "Startup failed",
+      );
+      await probeGame(repaired);
+      return repaired;
+    }
   }
   async function generate(e: React.FormEvent) {
     e.preventDefault();
@@ -170,10 +143,10 @@ function App() {
     setFormError(null);
     setPending(true);
     setError("");
-    setPhase("Asking AI to design your game…");
+    setPhase("AI is writing your game…");
     try {
-      const design = await requestGame(prompt);
-      setPhase("Design validated. Loading your world…");
+      const design = await checkAndRepair(await requestGame(prompt));
+      setPhase("Code checked. Loading your game…");
       setSession({
         id: crypto.randomUUID(),
         versions: [design],
@@ -182,7 +155,7 @@ function App() {
         prompt,
       });
       setSaved(false);
-      setNotice("AI design validated. Ready to play.");
+      setNotice("AI-written game checked. Ready to play.");
       location.hash = "studio";
     } catch (err) {
       setFormError({
@@ -217,24 +190,24 @@ function App() {
     setFormError(null);
     setPending(true);
     setError("");
-    setPhase(
-      session.source === "example"
-        ? "Applying a local example edit…"
-        : "Asking AI to revise this version…",
-    );
+    setPhase("AI is editing the source…");
     try {
-      const next =
-        session.source === "example"
-          ? editFixture(spec, edit)
-          : await requestGame(edit, spec);
+      const next = await checkAndRepair(
+        isCodeGame(spec)
+          ? await requestGame(edit, spec, runtimeError || undefined)
+          : await requestGame(session.prompt + "\nRequested changes: " + edit),
+      );
+      setRuntimeError("");
       setSession({
         ...session,
         versions: [...session.versions, next],
+        source: "ai",
+        thumbnail: undefined,
         index: session.versions.length,
       });
       setSaved(false);
       setNotice(
-        `Version ${session.versions.length + 1} ready. ${session.source === "example" ? "Local fixture edit; no AI request." : "AI edit validated."}`,
+        `Version ${session.versions.length + 1} ready. AI code edit checked.`,
       );
       setEdit("");
     } catch (err) {
@@ -257,6 +230,7 @@ function App() {
         source: session.source,
         prompt: session.prompt,
         updated: Date.now(),
+        thumbnail: session.thumbnail,
       });
       setSaved(true);
       setNotice("Saved to your library on this browser.");
@@ -276,25 +250,26 @@ function App() {
     a.download = "justplay-game.json";
     a.click();
     URL.revokeObjectURL(url);
-    setNotice("Game design exported.");
+    setNotice("Game exported.");
   }
   async function readFile(file?: File) {
     if (!file) return;
     try {
       const next = await importGame(file);
+      if (isCodeGame(next)) await probeGame(next);
       setSession({
         id: crypto.randomUUID(),
         versions: [next],
         index: 0,
-        source: "example",
+        source: isCodeGame(next) ? "ai" : "example",
         prompt: "Imported game",
       });
       setSaved(false);
-      setNotice("Imported design. Local fixture editing is enabled.");
+      setNotice("Game imported.");
       location.hash = "studio";
     } catch {
       setError(
-        "That file is not a valid JustPlay game. Choose an exported JSON game under 16 KB.",
+        "That file is not a valid JustPlay game. Choose an exported JSON game under 100 KB.",
       );
     }
     if (fileInput.current) fileInput.current.value = "";
@@ -346,19 +321,17 @@ function App() {
                   adventure.
                 </p>
               </div>
-              <div className="hero-art">
-                <World spec={examples[0].spec} large />
+              <div className="hero-art code-hero" aria-hidden="true">
+                <span className="code-window-dots">● ● ●</span>
+                <span className="code-hero-symbol">{"{ play }"}</span>
+                <p>
+                  Your idea becomes
+                  <br />
+                  <b>rules, art &amp; code.</b>
+                </p>
                 <div className="art-caption">
-                  <span className="status-dot" />A world waiting for you
-                  <span>Crystalwood · local example</span>
+                  <span className="status-dot" /> Written by AI. Played by you.
                 </div>
-                <button
-                  className="art-play"
-                  onClick={() => openExample(0)}
-                  aria-label="Play Crystalwood example"
-                >
-                  <Play fill="currentColor" size={24} />
-                </button>
               </div>
             </section>
             <section className="create-section" aria-label="Create a game">
@@ -378,7 +351,7 @@ function App() {
                   ref={composer}
                   name="prompt"
                   autoComplete="off"
-                  maxLength={2000}
+                  maxLength={6000}
                   rows={3}
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
@@ -392,10 +365,8 @@ function App() {
                 )}
                 <div className="composer-bottom">
                   <span>
-                    Five real ways to play.
-                    <small>
-                      Platformer · Runner · Survival · Basketball · Cricket
-                    </small>
+                    Your idea. Original game code.
+                    <small>AI writes the mechanics and visuals.</small>
                   </span>
                   <button className="primary" disabled={pending} type="submit">
                     {pending ? (
@@ -409,71 +380,38 @@ function App() {
                 </div>
               </form>
               <p className="honesty" id="create-help">
-                Supports arcade platformers, runners, survival adventures,
-                basketball shooting and cricket batting. Other mechanics are not
-                supported yet. Local examples work without an AI key.
+                Describe any game idea. AI builds a compact 2D prototype;
+                complex ideas may be simplified. Generation uses your provider’s
+                available free quota and can need a repair.
               </p>
             </section>
             <section className="examples-section">
               <div className="section-heading">
                 <div>
-                  <h2>A few worlds to get lost in.</h2>
-                  <p>Real, playable starting points. Make yourself at home.</p>
+                  <h2>Where will your idea go?</h2>
+                  <p>
+                    Writing prompts to start from. Every game is generated when
+                    you ask.
+                  </p>
                 </div>
-                <span className="section-note">HANDCRAFTED LOCAL EXAMPLES</span>
               </div>
-              <div className="examples-grid">
-                {showcasedGames.map((e, i) => (
-                  <article className="example" key={e.label}>
-                    <button
-                      className="preview-button"
-                      onClick={() => openExample(i)}
-                      aria-label={`Play ${e.label}`}
-                    >
-                      <World spec={e.spec} />
-                      <span className="preview-play">
-                        <Play size={18} fill="currentColor" />
-                      </span>
-                    </button>
-                    <div className="example-heading">
-                      <h3>
-                        <button
-                          className="text-button"
-                          onClick={() => openExample(i)}
-                        >
-                          {e.label}
-                        </button>
-                      </h3>
-                      <ArrowUpRight size={20} />
-                    </div>
-                    <p>
-                      {genreLabel[e.spec.genre]}
-                      <span>·</span>
-                      {e.spec.theme === "forest"
-                        ? "A curious little adventure"
-                        : e.spec.theme === "neon"
-                          ? "Chase the city lights"
-                          : e.spec.genre === "basketball"
-                            ? "Find your perfect shot"
-                            : e.spec.genre === "cricket"
-                              ? "Time it. Send it for six."
-                              : "Keep the darkness at bay"}
-                    </p>
-                    <button
-                      className="use-idea"
-                      onClick={() => {
-                        setPrompt(e.prompt);
-                        composer.current?.focus();
-                        composer.current?.scrollIntoView({
-                          block: "center",
-                          behavior: "smooth",
-                        });
-                      }}
-                    >
-                      Use this idea
-                      <ArrowRight size={14} />
-                    </button>
-                  </article>
+              <div className="idea-grid">
+                {ideas.map((idea) => (
+                  <button
+                    key={idea}
+                    className="idea-card"
+                    onClick={() => {
+                      setPrompt(idea);
+                      composer.current?.focus();
+                      composer.current?.scrollIntoView({
+                        block: "center",
+                        behavior: "smooth",
+                      });
+                    }}
+                  >
+                    {idea}
+                    <ArrowUpRight size={18} />
+                  </button>
                 ))}
               </div>
             </section>
@@ -506,10 +444,7 @@ function App() {
                   {spec.title}
                 </h1>
                 <p>
-                  {genreLabel[spec.genre]} · {spec.theme} ·{" "}
-                  {session.source === "example"
-                    ? "Local example"
-                    : "AI designed"}{" "}
+                  {isCodeGame(spec) ? "AI-written source" : "Legacy saved game"}{" "}
                   · v{session.index + 1}
                 </p>
               </div>
@@ -526,28 +461,40 @@ function App() {
             </div>
             <div className="studio-layout">
               <div className="play-column">
-                <GamePlayer spec={spec} />
+                {isCodeGame(spec) ? (
+                  <CodePlayer
+                    key={session.id + ":" + session.index}
+                    game={spec}
+                    onRuntimeError={setRuntimeError}
+                    onThumbnail={(thumbnail) =>
+                      setSession((current) =>
+                        current && current.index === current.versions.length - 1
+                          ? { ...current, thumbnail }
+                          : current,
+                      )
+                    }
+                  />
+                ) : (
+                  <GamePlayer spec={spec} />
+                )}
                 <div className="game-notes">
-                  <h2>Your mission</h2>
+                  <h2>How to play</h2>
                   <p>
-                    {spec.genre === "basketball"
-                      ? `Score ${spec.goal} points. Arrows adjust aim. Hold Space to charge, then release in the green power band. You have ${spec.health} missed shots.`
-                      : spec.genre === "cricket"
-                        ? `Score ${spec.goal} runs. Press Space when the delivery reaches the green batting zone. Good timing earns fours and sixes; misses cost a wicket.`
-                        : spec.genre === "survival"
-                          ? `Defeat ${spec.goal} creatures. Your lantern fires automatically; keep moving to stay alive.`
-                          : spec.genre === "runner"
-                            ? "Jump the rooftop barriers and reach the end. The city gets faster as you run."
-                            : `Gather ${spec.goal} crystals and reach the glowing forest gate. Jump on slimes to defeat them.`}
+                    {isCodeGame(spec) ? spec.instructions : spec.description}
                   </p>
-                  <div className="mechanic-tags">
-                    {spec.mechanics.doubleJump && <span>Double jump</span>}
-                    {spec.mechanics.dash && <span>Dash</span>}
-                    {spec.enemies.includes("bat") && (
-                      <span>Flying enemies</span>
-                    )}
-                    <span>Difficulty {spec.difficulty}/5</span>
-                  </div>
+                  {isCodeGame(spec) && spec.notes && <p>{spec.notes}</p>}
+                  {isCodeGame(spec) && (
+                    <>
+                      <button onClick={() => setShowCode(!showCode)}>
+                        {showCode ? "Hide source" : "View generated source"}
+                      </button>
+                      {showCode && (
+                        <pre className="source-view" tabIndex={0}>
+                          <code>{spec.code}</code>
+                        </pre>
+                      )}
+                    </>
+                  )}
                 </div>
               </div>
               <aside className="edit-panel">
@@ -573,14 +520,8 @@ function App() {
                     autoComplete="off"
                     value={edit}
                     onChange={(e) => setEdit(e.target.value)}
-                    maxLength={2000}
-                    placeholder={
-                      spec.genre === "basketball"
-                        ? "Give me more tries…"
-                        : spec.genre === "cricket"
-                          ? "Give me more wickets…"
-                          : "Give me a double jump…"
-                    }
+                    maxLength={6000}
+                    placeholder="Describe a change to the rules, controls or artwork…"
                     rows={4}
                     disabled={pending}
                   />
@@ -599,44 +540,29 @@ function App() {
                     <ArrowRight size={16} />
                   </button>
                 </form>
-                <div className="edit-suggestions">
-                  {(spec.genre === "basketball" || spec.genre === "cricket"
-                    ? [
-                        "Make it harder",
-                        spec.genre === "cricket"
-                          ? "Give me more wickets"
-                          : "Give me more tries",
-                        "Raise the target score",
-                        "Change to nighttime",
-                      ]
-                    : [
-                        "Make it harder",
-                        "Add flying enemies",
-                        "Change to nighttime",
-                        "Give me a double jump",
-                      ]
-                  ).map((s) => (
+                {runtimeError && (
+                  <div role="alert">
+                    <p>The generated code stopped: {runtimeError}</p>
                     <button
-                      key={s}
                       disabled={pending}
                       onClick={() => {
-                        setEdit(s);
+                        setEdit(
+                          "Repair this runtime error while preserving the game's rules and visuals.",
+                        );
                         editInput.current?.focus();
                       }}
                     >
-                      {s}
-                      <Plus size={13} />
+                      Ask AI to repair
                     </button>
-                  ))}
-                </div>
+                  </div>
+                )}
                 <p className="local-note">
-                  {session.source === "example"
-                    ? "Local example mode: the four suggested edits use explicit fixtures. Custom prompts need AI creation."
-                    : "Edits use your configured AI provider and its available free quota."}
+                  AI edits the actual source. Your earlier versions stay
+                  available. Each request uses the provider’s free quota.
                 </p>
                 <div className="versions">
                   <h3>Version history</h3>
-                  {session.versions.map((v, i) => (
+                  {session.versions.map((_v, i) => (
                     <button
                       key={i}
                       aria-current={i === session.index ? "true" : undefined}
@@ -646,9 +572,7 @@ function App() {
                       <span>
                         <b>Version {i + 1}</b>
                         <small>
-                          {i === 0
-                            ? "Original world"
-                            : `${v.night ? "Nighttime" : "Daytime"} · difficulty ${v.difficulty}`}
+                          {i === 0 ? "Original game" : "AI source revision"}
                         </small>
                       </span>
                       {i === session.index ? (
@@ -668,9 +592,7 @@ function App() {
             <h1 ref={title} tabIndex={-1}>
               A world is waiting.
             </h1>
-            <p>
-              Choose a local example or describe a new game to open the studio.
-            </p>
+            <p>Describe a game to open the studio.</p>
             <a className="button primary" href="#home">
               Start creating
               <ArrowRight size={16} />
@@ -707,7 +629,7 @@ function App() {
               <div className="empty-state">
                 <Library size={42} strokeWidth={1} />
                 <h2>Room for your first world.</h2>
-                <p>Play an example, make it your own, then save it here.</p>
+                <p>Create a game, make it your own, then save it here.</p>
                 <a className="button primary" href="#home">
                   Find your first game
                   <ArrowRight size={16} />
@@ -731,7 +653,19 @@ function App() {
                         }}
                         aria-label={`Open ${v.title}`}
                       >
-                        <World spec={v} />
+                        <div className="saved-preview">
+                          {game.thumbnail ? (
+                            <img
+                              src={game.thumbnail}
+                              alt=""
+                              width="320"
+                              height="180"
+                              loading="lazy"
+                            />
+                          ) : (
+                            <span aria-hidden="true">{"{ play }"}</span>
+                          )}
+                        </div>
                         <span className="preview-play">
                           <Play size={18} />
                         </span>
@@ -746,7 +680,8 @@ function App() {
                         </button>
                       </div>
                       <p>
-                        {genreLabel[v.genre]} · {game.versions.length} version
+                        {isCodeGame(v) ? "Generated source" : "Legacy save"} ·{" "}
+                        {game.versions.length} version
                         {game.versions.length > 1 ? "s" : ""}
                       </p>
                       {deleting === game.id && (

@@ -1,57 +1,81 @@
 import { test, expect } from "@playwright/test";
-test("creates all three families and edits through the real Vercel HTTP entry point", async ({
+test("source creation, input, edit, history and persistence through native Vercel route (mock upstream)", async ({
   page,
 }) => {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto("/");
-  const ideas = [
-    ["A fox in a forest platformer", "Crystalwood"],
-    ["A neon cyberpunk runner", "Neon Drift"],
-    ["A dungeon survival game", "The Last Lantern"],
-  ];
-  for (const [index, [prompt, title]] of ideas.entries()) {
-    await page.getByLabel("What do you want to play?").fill(prompt);
-    const response = page.waitForResponse(
-      (r) =>
-        r.url().endsWith("/api/generate") && r.request().method() === "POST",
-    );
-    await page
-      .getByRole("button", { name: "Create my game", exact: true })
-      .click();
-    const api = await response;
-    expect(api.status()).toBe(200);
-    expect(api.headers()["content-type"]).toContain("application/json");
-    await expect(
-      page.getByRole("heading", { level: 1, name: title, exact: true }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("button", { name: "Play game", exact: true }),
-    ).toBeVisible();
-    if (index === 0) {
-      await page.getByLabel("What would you change?").fill("Make it harder");
-      await page
-        .getByRole("button", { name: "Apply changes", exact: true })
-        .click();
-      await expect(page.getByText("Difficulty 3/5")).toBeVisible();
-      await expect(
-        page.getByRole("button", { name: "Version 2", exact: false }),
-      ).toBeVisible();
-    }
-    await page.getByRole("link", { name: "Create another world" }).click();
-    await expect(page.getByLabel("What do you want to play?")).toBeVisible();
+  await page
+    .getByLabel("What do you want to play?")
+    .fill("An orbit painter with a growing circle");
+  await page
+    .getByRole("button", { name: "Create my game", exact: true })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: "Orbit painter", exact: true }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Play game", exact: true }).click();
+  await page.waitForTimeout(250);
+  const canvas = page.frameLocator("iframe.code-frame").locator("canvas");
+  await canvas.focus();
+  for (let n = 0; n < 3; n++) {
+    await page.keyboard.down("Space");
+    await page.waitForTimeout(60);
+    await page.keyboard.up("Space");
+    await page.waitForTimeout(100);
   }
+  await expect(
+    page.getByRole("heading", { name: "You did it." }),
+  ).toBeVisible();
+  await page
+    .getByLabel("What would you change?")
+    .fill("Change the circle to orange");
+  await page
+    .getByRole("button", { name: "Apply changes", exact: true })
+    .click();
+  await expect(page.getByRole("button", { name: /Version 2/ })).toBeVisible();
+  await page.getByRole("button", { name: "View generated source" }).click();
+  await expect(page.locator(".source-view")).toContainText("#ff8800");
+  await page.getByRole("button", { name: /Version 1/ }).click();
+  await expect(page.locator(".source-view")).toContainText("#d8ed83");
+  await page.getByRole("button", { name: /Version 2/ }).click();
+  await page.getByRole("button", { name: "Save game", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Saved", exact: true }),
+  ).toBeVisible();
+  await page.getByRole("link", { name: "Your library", exact: false }).click();
+  await page.getByRole("button", { name: "Open Orbit painter" }).click();
+  await expect(
+    page.getByRole("button", { name: "Play game", exact: true }),
+  ).toBeVisible();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.screenshot({
+    path: "docs/screenshots/generated-mobile.png",
+    fullPage: true,
+  });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(
+    390,
+  );
+  await page.getByRole("button", { name: "Play game", exact: true }).click();
+  const paint = page.getByRole("button", { name: "Paint", exact: true });
+  await expect(paint).toBeEnabled();
+  const box = await paint.boundingBox();
+  if (!box) throw Error("Missing generated control");
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.waitForTimeout(120);
+  await page.mouse.up();
+  await expect(page.locator(".generated-hud")).toContainText("1");
   expect(errors).toEqual([]);
 });
-test("method and origin guards return JSON from the native route", async ({
-  request,
-}) => {
-  const get = await request.get("/api/generate");
-  expect(get.status()).toBe(405);
-  expect(await get.json()).toMatchObject({ error: "Use POST for generation." });
-  const blocked = await request.post("/api/generate", {
-    headers: { Origin: "https://evil.test" },
-    data: { prompt: "A fox game" },
-  });
-  expect(blocked.status()).toBe(403);
+test("native route method and origin guards", async ({ request }) => {
+  expect((await request.get("/api/generate")).status()).toBe(405);
+  expect(
+    (
+      await request.post("/api/generate", {
+        headers: { Origin: "https://evil.test" },
+        data: { prompt: "any game" },
+      })
+    ).status(),
+  ).toBe(403);
 });

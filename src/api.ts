@@ -1,15 +1,16 @@
-import { validateSpec, type GameSpec } from "./spec";
+import { validateCodeGame, type CodeGame } from "./code-game";
 export async function requestGame(
   prompt: string,
-  current?: GameSpec,
-): Promise<GameSpec> {
+  current?: CodeGame,
+  runtimeError?: string,
+): Promise<CodeGame> {
   let response: Response;
   try {
     response = await fetch("/api/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt, current }),
-      signal: AbortSignal.timeout(45000),
+      body: JSON.stringify({ prompt, current, runtimeError }),
+      signal: AbortSignal.timeout(65000),
     });
   } catch (error) {
     if (
@@ -39,7 +40,7 @@ export async function requestGame(
         "This deployment requires access. Sign in to the deployment, or open its public production URL.",
       );
     throw new Error(
-      "The game API is missing from this deployment. Redeploy the latest main branch with Vercel’s Vite preset, then try again. Local examples still work.",
+      "The game API is missing from this deployment. Redeploy the latest main branch with Vercel’s Vite preset, then try again. ",
     );
   }
   let data: unknown;
@@ -61,14 +62,14 @@ export async function requestGame(
     throw new Error(message || "Could not generate this game. Try again.");
   }
   try {
-    return validateSpec(
-      data && typeof data === "object" && "spec" in data
-        ? data.spec
+    return validateCodeGame(
+      data && typeof data === "object" && "game" in data
+        ? data.game
         : undefined,
     );
   } catch {
     throw new Error(
-      "The game service returned an invalid design. Try a simpler idea; your current game is unchanged.",
+      "The game service returned an invalid code artifact. Try a simpler idea; your current game is unchanged.",
     );
   }
 }

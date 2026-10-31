@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { GameSpecSchema, validateSpec } from "../../src/spec.js";
+import { CodeGameSchema, validateCodeGame } from "../../src/code-game.js";
 import {
   createProvider,
   ProviderError,
@@ -12,8 +12,9 @@ export type Env = ProviderEnv & {
 };
 const inputSchema = z
   .object({
-    prompt: z.string().trim().min(3).max(2000),
-    current: GameSpecSchema.optional(),
+    prompt: z.string().trim().min(3).max(6000),
+    current: CodeGameSchema.optional(),
+    runtimeError: z.string().max(1200).optional(),
   })
   .strict();
 function json(data: unknown, status = 200) {
@@ -47,7 +48,7 @@ export async function onRequest({
       return json(
         {
           error:
-            "AI is disabled until the server rate limiter is configured. Play a local example.",
+            "AI is disabled until the server rate limiter is configured. Configure its documented server binding and redeploy.",
         },
         503,
       );
@@ -59,7 +60,7 @@ export async function onRequest({
         { error: "Too many requests. Wait a minute before generating again." },
         429,
       );
-    // Read at most 16 KiB, including when Content-Length is missing or dishonest.
+    // Read at most 192 KiB, including when Content-Length is missing or dishonest.
     const reader = request.body?.getReader();
     if (!reader) return json({ error: "The request is empty." }, 400);
     const chunks: Uint8Array[] = [];
@@ -68,7 +69,7 @@ export async function onRequest({
       const { done, value } = await reader.read();
       if (done) break;
       bytes += value.byteLength;
-      if (bytes > 16384) {
+      if (bytes > 196608) {
         await reader.cancel();
         return json({ error: "The game request is too large." }, 413);
       }
@@ -83,11 +84,11 @@ export async function onRequest({
     const input = inputSchema.parse(
       JSON.parse(new TextDecoder().decode(merged)),
     );
-    if (input.current) validateSpec(input.current);
+    if (input.current) validateCodeGame(input.current);
     const spec = input.current
-      ? await provider.editGame(input.current, input.prompt)
+      ? await provider.editGame(input.current, input.prompt, input.runtimeError)
       : await provider.generateGame(input.prompt);
-    return json({ spec });
+    return json({ game: spec, trace: provider.trace });
   } catch (error) {
     if (error instanceof ProviderError)
       return json({ error: error.message }, error.status);
@@ -95,7 +96,7 @@ export async function onRequest({
       return json(
         {
           error:
-            "Invalid game request. Use a prompt of 3–2000 characters and a supported design.",
+            "Invalid game request. Use a prompt of 3–6000 characters and a valid current game.",
         },
         400,
       );

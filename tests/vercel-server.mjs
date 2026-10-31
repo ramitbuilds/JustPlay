@@ -3,39 +3,34 @@
 import { createServer } from "node:http";
 import { createServer as createViteServer } from "vite";
 
-process.env.AI_PROVIDER = "groq";
-process.env.GROQ_API_KEY = "test-fixture-not-a-real-key";
-process.env.GROQ_MODEL = "llama-3.3-70b-versatile";
+process.env.AI_PROVIDER = "gemma";
+process.env.GEMINI_API_KEY = "test-fixture-not-a-real-key";
+process.env.GEMMA_MODEL = "gemma-4-26b-a4b-it";
 const vite = await createViteServer({
   server: { middlewareMode: true },
   appType: "spa",
 });
-const { examples, sportsExamples } =
-  await vite.ssrLoadModule("/src/fixtures.ts");
+const { source, patch } = await vite.ssrLoadModule("/tests/code-fixture.ts");
 const handler = (await vite.ssrLoadModule("/api/generate.ts")).default;
 globalThis.fetch = async (url, options) => {
-  if (url !== "https://api.groq.com/openai/v1/chat/completions")
-    throw new Error("Unexpected outbound request in Vercel fixture test");
-  const payload = JSON.parse(options.body);
-  const { request, current } = JSON.parse(payload.messages[1].content);
-  const index = /runner|neon/i.test(request)
-    ? 1
-    : /dungeon|survival/i.test(request)
-      ? 2
-      : 0;
-  const sport = /basketball/i.test(request)
-    ? sportsExamples[0].spec
-    : /cricket/i.test(request)
-      ? sportsExamples[1].spec
-      : null;
-  const spec = current
-    ? { ...current, difficulty: Math.min(5, current.difficulty + 1) }
-    : (sport ?? examples[index].spec);
+  if (
+    url !==
+    "https://generativelanguage.googleapis.com/v1beta/models/gemma-4-26b-a4b-it:generateContent"
+  )
+    throw new Error("Unexpected outbound request");
+  const body = JSON.parse(options.body);
+  const { current } = JSON.parse(body.contents[0].parts[0].text);
+  if (
+    options.headers["x-goog-api-key"] !== process.env.GEMINI_API_KEY ||
+    !body.systemInstruction
+  )
+    throw Error("Invalid Google request");
   return Response.json({
-    choices: [
+    candidates: [
       {
-        message: {
-          content: JSON.stringify({ ...spec, supported: true, reason: "" }),
+        finishReason: "STOP",
+        content: {
+          parts: [{ text: current ? JSON.stringify(patch) : source }],
         },
       },
     ],
