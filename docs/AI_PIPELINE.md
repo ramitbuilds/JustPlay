@@ -2,7 +2,7 @@
 
 `POST /api/generate` receives `{prompt, current?}`. Cloudflare checks same-origin JSON, limits input to 16 KiB (including streamed bodies), validates prompt length 3–2000, validates the current design and applies the server rate-limit binding. Without a provider key or limiter, it fails closed with 503.
 
-Groq uses chat completions at `https://api.groq.com/openai/v1/chat/completions`, separate system/user roles and JSON-object output. Gemini uses `https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent`, `x-goog-api-key`, contents/parts and plain JSON instructions; it does not assume Gemma supports Gemini systemInstruction, responseSchema or thinking options. The user request and current spec are serialized as data. No returned code is executed.
+Groq uses chat completions at `https://api.groq.com/openai/v1/chat/completions`, separate system/user roles and strict JSON-schema output. Gemini uses `https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent`, `x-goog-api-key`, contents/parts and plain JSON instructions; it does not assume Gemma supports Gemini systemInstruction, responseSchema or thinking options. The user request and current spec are serialized as data. No returned code is executed.
 
 Shared Zod validation checks bounds, enums, strict field sets, unique enemies and survival combat. At most one repair request follows invalid model JSON. Requests time out after 18 seconds per attempt. Quota failures are surfaced immediately; no automatic provider fallback. Each edit receives the selected version and preserves unrelated properties by instruction. The runtime cannot guarantee an LLM follows edit intent perfectly; history enables rollback.
 
@@ -21,3 +21,5 @@ Cloudflare routes to the shared handler via `worker.ts` or the Pages entry. Verc
 ## Groq model migration
 
 Live production verification reached Groq but received model-unavailable/retired for `llama-3.3-70b-versatile`. The current official [Groq TypeScript SDK README](https://github.com/groq/groq-typescript/blob/main/README.md) uses `openai/gpt-oss-20b`; its model types include both GPT OSS 20B/120B and document low/medium/high reasoning effort. The adapter now defaults to 20B with low reasoning and deterministically migrates the legacy Llama setting. There is no provider switch or quota-error fallback. Groq's rendered quota pages remain inaccessible (403); current account Free-plan eligibility still belongs to the operator, and no unlimited capacity is claimed.
+
+Groq GPT OSS requests use `response_format.type=json_schema`, `strict=true`, low reasoning, hidden reasoning output and a 4096-token completion ceiling. JSON mode alone produced invalid live GameSpec data; strict schema decoding is now required. Zod and semantic validation still run after decoding.

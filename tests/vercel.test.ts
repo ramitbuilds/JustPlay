@@ -321,13 +321,11 @@ describe("current Groq model selection", () => {
   it.each([undefined, "llama-3.3-70b-versatile"])(
     "uses the current model for default/retired setting %s",
     async (model) => {
-      const upstream = vi
-        .fn()
-        .mockResolvedValue(
-          Response.json({
-            choices: [{ message: { content: JSON.stringify(spec) } }],
-          }),
-        );
+      const upstream = vi.fn().mockResolvedValue(
+        Response.json({
+          choices: [{ message: { content: JSON.stringify(spec) } }],
+        }),
+      );
       await createProvider(
         { AI_PROVIDER: "groq", GROQ_API_KEY: "test", GROQ_MODEL: model },
         upstream,
@@ -335,6 +333,12 @@ describe("current Groq model selection", () => {
       const body = JSON.parse(upstream.mock.calls[0][1].body);
       expect(body.model).toBe("openai/gpt-oss-20b");
       expect(body.reasoning_effort).toBe("low");
+      expect(body.include_reasoning).toBe(false);
+      expect(body.response_format.type).toBe("json_schema");
+      expect(body.response_format.json_schema.strict).toBe(true);
+      expect(body.response_format.json_schema.schema.additionalProperties).toBe(
+        false,
+      );
       expect(upstream).toHaveBeenCalledTimes(1);
     },
   );
