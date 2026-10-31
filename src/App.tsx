@@ -76,6 +76,10 @@ function App() {
     [pending, setPending] = useState(false),
     [phase, setPhase] = useState(""),
     [error, setError] = useState(""),
+    [formError, setFormError] = useState<{
+      target: "create" | "edit";
+      message: string;
+    } | null>(null),
     [notice, setNotice] = useState(""),
     [edit, setEdit] = useState(""),
     [games, setGames] = useState<SavedGame[]>([]),
@@ -91,6 +95,7 @@ function App() {
     const change = () => {
       setRoute(location.hash.slice(1) || "home");
       setError("");
+      setFormError(null);
     };
     window.addEventListener("hashchange", change);
     return () => window.removeEventListener("hashchange", change);
@@ -114,6 +119,10 @@ function App() {
     window.addEventListener("beforeunload", handler);
     return () => window.removeEventListener("beforeunload", handler);
   }, [session, saved]);
+  useEffect(() => {
+    if (!pending && formError)
+      (formError.target === "create" ? composer : editInput).current?.focus();
+  }, [pending, formError]);
   async function refresh() {
     try {
       const result = await listGames();
@@ -142,10 +151,14 @@ function App() {
   async function generate(e: React.FormEvent) {
     e.preventDefault();
     if (prompt.trim().length < 3) {
-      setError("Describe your game in at least 3 characters.");
+      setFormError({
+        target: "create",
+        message: "Describe your game in at least 3 characters.",
+      });
       composer.current?.focus();
       return;
     }
+    setFormError(null);
     setPending(true);
     setError("");
     setPhase("Asking AI to design your game…");
@@ -163,11 +176,13 @@ function App() {
       setNotice("AI design validated. Ready to play.");
       location.hash = "studio";
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Could not generate this game. Try again.",
-      );
+      setFormError({
+        target: "create",
+        message:
+          err instanceof Error
+            ? err.message
+            : "Could not generate this game. Try again.",
+      });
       composer.current?.focus();
     } finally {
       setPending(false);
@@ -177,7 +192,10 @@ function App() {
   async function revise(e: React.FormEvent) {
     e.preventDefault();
     if (!spec || !session || edit.trim().length < 3) {
-      setError("Describe the change in at least 3 characters.");
+      setFormError({
+        target: "edit",
+        message: "Describe the change in at least 3 characters.",
+      });
       editInput.current?.focus();
       return;
     }
@@ -187,6 +205,7 @@ function App() {
       );
       return;
     }
+    setFormError(null);
     setPending(true);
     setError("");
     setPhase(
@@ -210,9 +229,11 @@ function App() {
       );
       setEdit("");
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Could not apply this edit.",
-      );
+      setFormError({
+        target: "edit",
+        message:
+          err instanceof Error ? err.message : "Could not apply this edit.",
+      });
     } finally {
       setPending(false);
       setPhase("");
@@ -339,6 +360,12 @@ function App() {
                 </label>
                 <textarea
                   id="game-prompt"
+                  aria-invalid={formError?.target === "create" || undefined}
+                  aria-describedby={
+                    formError?.target === "create"
+                      ? "create-error"
+                      : "create-help"
+                  }
                   ref={composer}
                   name="prompt"
                   autoComplete="off"
@@ -349,6 +376,11 @@ function App() {
                   placeholder="A tiny fox exploring a forest full of glowing crystals…"
                   disabled={pending}
                 />
+                {formError?.target === "create" && (
+                  <p id="create-error" className="form-error" role="alert">
+                    {formError.message}
+                  </p>
+                )}
                 <div className="composer-bottom">
                   <span>
                     One idea. Three ways to play.
@@ -365,7 +397,7 @@ function App() {
                   </button>
                 </div>
               </form>
-              <p className="honesty">
+              <p className="honesty" id="create-help">
                 AI creation needs a configured free provider. No key? Play and
                 remix the local examples below.
               </p>
@@ -513,6 +545,10 @@ function App() {
                   <textarea
                     ref={editInput}
                     id="edit-prompt"
+                    aria-invalid={formError?.target === "edit" || undefined}
+                    aria-describedby={
+                      formError?.target === "edit" ? "edit-error" : undefined
+                    }
                     name="edit"
                     autoComplete="off"
                     value={edit}
@@ -522,6 +558,11 @@ function App() {
                     rows={4}
                     disabled={pending}
                   />
+                  {formError?.target === "edit" && (
+                    <p id="edit-error" className="form-error" role="alert">
+                      {formError.message}
+                    </p>
+                  )}
                   <button className="primary" disabled={pending} type="submit">
                     {pending ? (
                       <LoaderCircle className="spin" size={16} />

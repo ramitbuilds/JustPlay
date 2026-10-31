@@ -76,7 +76,7 @@ test("landing, studio, edits, versions, save/reopen and library deletion", async
   ).toBeVisible();
   expect(errors).toEqual([]);
 });
-test("honest missing-proxy error and invalid import", async ({ page }) => {
+test("honest missing-API error and invalid import", async ({ page }) => {
   await page.goto("/");
   await page
     .getByLabel("What do you want to play?")
@@ -84,7 +84,25 @@ test("honest missing-proxy error and invalid import", async ({ page }) => {
   await page
     .getByRole("button", { name: "Create my game", exact: true })
     .click();
-  await expect(page.getByRole("alert")).toContainText("proxy is unavailable");
+  await expect(page.getByRole("alert")).toContainText("game API is missing");
+  const prompt = page.getByLabel("What do you want to play?");
+  await expect(prompt).toBeFocused();
+  await expect(prompt).toHaveAttribute("aria-invalid", "true");
+  await expect(prompt).toHaveAttribute("aria-describedby", "create-error");
+  await expect(prompt).toHaveValue("A robot collecting coins");
+  await page.screenshot({
+    path: "docs/screenshots/vercel-error-desktop.png",
+    fullPage: true,
+  });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.screenshot({
+    path: "docs/screenshots/vercel-error-mobile.png",
+    fullPage: true,
+  });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(
+    390,
+  );
+
   await expect(page.locator("canvas")).toHaveCount(0);
   await page.getByRole("link", { name: "Your library" }).click();
   await page.getByLabel("Import a JustPlay game").setInputFiles({
