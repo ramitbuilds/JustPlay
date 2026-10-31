@@ -6,6 +6,12 @@ Provider deadlines now cover headers and body, with 105 seconds per attempt and 
 
 61 unit tests pass, including a fake-clock Google response after 30 seconds (past the old cutoff), transient 500 recovery, exhausted 503 classification, no retry after cancellation, progress delivery before inference finishes, fragmented UTF-8 event parsing and incomplete/error streams. Typecheck, lint, production build and emitted Node HTTP smoke pass. All 3 native HTTP/browser tests passed, including a delayed mocked Google response that proves progress arrives before inference completes, plus actual source play/edit/history/save/mobile checks and method/origin guards. No template or substitute game is generated on failure.
 
+## Live production verification
+
+Vercel deployment for 8ed0270 succeeded. The production endpoint returned NDJSON headers/progress in 0.5–0.6 seconds and heartbeats every 8 seconds. A real Google Gemma request completed in **46.9 seconds**, returning provider=gemma, model=gemma-4-26b-a4b-it and 6,451 characters of original source for **Bloom Bounce**. This passed the former 25-second cutoff without disconnecting.
+
+Opened that exact AI artifact in the production player (no additional inference and no test fixture): startup probe passed; clicking started the garden paddle-and-ball game; HUD changed from Score20/Lives2 to Score30/Lives0 during live play. No runtime repair error or browser page error occurred. Screenshot: [real Gemma game](screenshots/gemma-live-bloom.png). This verifies this actual request and game, not a guarantee every generation will succeed. Existing Google credentials stayed in Vercel; no secrets were read or changed.
+
 ---
 
 # Source generation and direct Gemma setup — 2026-10-31

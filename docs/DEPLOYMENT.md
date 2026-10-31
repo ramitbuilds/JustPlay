@@ -66,7 +66,7 @@ Static headers enforce same-origin scripts, same-origin sandbox framing, no plug
 - Model unavailable (404): use the exact supported model ID above and confirm access in AI Studio.
 - Quota (429): wait for the account's free quota reset; retrying immediately or changing app UI does not reset Google's quota.
 
-No Google key was available in this workspace. Native request construction, code generation/editing responses, error handling and the full HTTP/browser path are tested with mocked Google responses. Live Google inference must be verified after adding the key to Vercel; no successful live Gemma request is claimed.
+No Google key was available in this workspace. Native request construction, code generation/editing responses, error handling and the full HTTP/browser path are tested with mocked Google responses. The timeout follow-up also verified real Gemma generation in 46.9 seconds using the existing Vercel key and successfully played the returned source. No additional environment changes are required for the timeout repair.
 
 ## Generation timeout repair
 

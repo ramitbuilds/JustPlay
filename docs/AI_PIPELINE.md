@@ -24,7 +24,7 @@ User requested Gemma directly instead of Groq. [Google's Gemma-on-Gemini-API gui
 
 The app defaults to `AI_PROVIDER=gemma` and `gemma-4-26b-a4b-it`. Requests go directly to `https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent` with `x-goog-api-key`, a real `systemInstruction`, user contents/parts and `thinkingConfig.thinkingLevel=minimal` (documented Gemma 4 thinking-off mode). No Groq/OpenAI message format, strict response schema or paid tools are sent to Google. Thought parts are excluded; MAX_TOKENS triggers one bounded repair. Google invalid-key details, missing access, unavailable models and quota errors have actionable messages. No automatic provider fallback.
 
-Native Google creation and source-patch editing are mocked-adapter and full HTTP/browser tested. No Google key was available for live inference; no live Gemma success is claimed. Credentials remain server-only.
+Native Google creation and source-patch editing are mocked-adapter and full HTTP/browser tested. The timeout follow-up verified real Google Gemma generation on Vercel in 46.9 seconds and played its actual output successfully. The workspace still has no Google key; the existing Production credential stayed server-only. See TEST_RESULTS.md.
 
 ## Streaming and deployment deadlines
 
