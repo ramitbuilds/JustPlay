@@ -46,3 +46,5 @@ Live cricket and basketball requests now produce matching validated sports games
 ## Freeform generation follow-up
 
 User explicitly requested AI-written logic without keyword routing or hardcoded game families. Replace the constrained spec path with source/patch generation, isolate execution in an opaque iframe Worker, keep legacy saves, test source validation/runtime/input/editing/security, review official Groq SDK and Vercel guidelines, push main and verify live Groq output. Startup checks cannot guarantee semantic fidelity; record actual live observations separately.
+
+Completed source artifact/patch providers, opaque Worker player and watchdog, legacy-save compatibility, source editing/history/library UI, native Google Gemini system instructions with minimal thinking, model/key/quota recovery, current deployment docs and regression checks. Pushed main in short lowercase commits. Waiting for automatic Vercel build; live Google inference requires the operator's Google key in Production.

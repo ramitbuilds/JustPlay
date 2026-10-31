@@ -1,3 +1,19 @@
+# Source generation and direct Gemma setup — 2026-10-31
+
+Current implementation replaces keyword/family selection with AI-written source and exact-source edits. Google AI Studio's Gemini API using Gemma 4 is the default; there is no Groq fallback. The historical results below describe earlier versions.
+
+- Typecheck, ESLint, production build and Node ESM/HTTP Vercel smoke passed.
+- Unit tests: **53 passed**, covering source parsing/syntax without execution, bounded artifacts, exact patches, native Google system/user configuration, hidden thought filtering, truncated-output retry, model/key/quota handling, environment defaults, server origin/body/rate limits and client recovery.
+- Browser tests: **5 sandbox tests passed**, including literal source preservation, unavailable network/DOM/storage capabilities, runtime error cleanup, infinite-loop termination, and execution with deployed CSP intersection while dynamic evaluation remains blocked.
+- Browser UI: **3 passed** for actionable missing API/import errors, corrupt saves and responsive prompt entry without preset launches.
+- Native HTTP/browser suite: **2 passed** with mocked Google inference responses. It exercises the actual Vercel Node handler, native Gemini wire format, source startup, keyboard win, source-patch edit, immutable rollback, save/reopen and generated mobile controls. The fixture is test-only and is never selected by production generation.
+- Legacy compatibility: **9 gameplay tests passed** for older platformer, runner, survival, basketball and cricket saves. New generation does not use these runtimes.
+- Read Google’s Gemma-on-Gemini-API guide, changelog, pricing and generateContent reference. Read Vercel design.md and Web Interface Guidelines. Current mobile screenshots are generated-home-mobile.png and generated-mobile.png; the studio screenshot shows an explicitly labeled automated fixture.
+
+No Google API key is available in the workspace. Successful live Gemma generation is **not claimed**. The operator must add the Google AI Studio key, change AI_PROVIDER to gemma and redeploy Vercel. The app never substitutes a preset when generation fails. Startup probing does not prove gameplay quality or complete fidelity to every request.
+
+---
+
 > Historical report. The source-generation change supersedes preset-family generation described below. See [AI_PIPELINE.md](AI_PIPELINE.md) and [ARCHITECTURE.md](ARCHITECTURE.md) for the current implementation.
 
 # Verification — 2026-10-31
