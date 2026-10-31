@@ -3,6 +3,7 @@ import { examples } from "../src/fixtures";
 import { providerEnvironment } from "../src/server/environment";
 import { createInstanceRateLimiter } from "../src/server/rate-limit";
 import { requestGame } from "../src/api";
+import { createProvider } from "../src/server/providers";
 
 const spec = examples[0].spec;
 afterEach(() => {
@@ -256,5 +257,62 @@ describe("client failure recovery", () => {
       vi.fn().mockResolvedValue(Response.json({ spec: { hero: "mario" } })),
     );
     await expect(requestGame("a fox")).rejects.toThrow("invalid design");
+  });
+});
+
+describe("safe upstream diagnostics", () => {
+  it.each([
+    [
+      401,
+      {
+        error: {
+          code: "invalid_api_key",
+          message: "secret must never be echoed",
+        },
+      },
+      "Update GROQ_API_KEY",
+    ],
+    [
+      400,
+      { error: { code: "model_decommissioned" } },
+      "unavailable or retired",
+    ],
+    [404, { error: { code: "model_not_found" } }, "unavailable or retired"],
+    [
+      403,
+      { error: { message: "secret must never be echoed" } },
+      "denied access",
+    ],
+    [400, { error: { message: "secret must never be echoed" } }, "HTTP 400"],
+  ])(
+    "classifies Groq HTTP %i without upstream leakage",
+    async (status, error, message) => {
+      const upstream = vi
+        .fn()
+        .mockResolvedValue(Response.json(error, { status }));
+      await expect(
+        createProvider(
+          { AI_PROVIDER: "groq", GROQ_API_KEY: "test" },
+          upstream,
+        ).generateGame("a fox"),
+      ).rejects.toThrow(message);
+      expect(upstream).toHaveBeenCalledTimes(1);
+    },
+  );
+  it("recognizes Gemini's invalid-key details", async () => {
+    const upstream = vi
+      .fn()
+      .mockResolvedValue(
+        Response.json(
+          { error: { code: 400, details: [{ reason: "API_KEY_INVALID" }] } },
+          { status: 400 },
+        ),
+      );
+    await expect(
+      createProvider(
+        { AI_PROVIDER: "gemma", GEMINI_API_KEY: "test" },
+        upstream,
+      ).generateGame("a fox"),
+    ).rejects.toThrow("Update GEMINI_API_KEY");
   });
 });

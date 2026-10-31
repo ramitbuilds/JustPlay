@@ -103,10 +103,60 @@ export function createProvider(
           "Free inference quota reached. Wait for the provider quota to reset, or play an example.",
           429,
         );
-      if (!response.ok)
+      if (!response.ok) {
+        // Inspect only known error categories; never expose raw upstream text or keys.
+        const failure: unknown = await response.json().catch(() => null);
+        const error =
+          failure && typeof failure === "object" && "error" in failure
+            ? failure.error
+            : null;
+        const code =
+          error && typeof error === "object" && "code" in error
+            ? error.code
+            : undefined;
+        const details =
+          error &&
+          typeof error === "object" &&
+          "details" in error &&
+          Array.isArray(error.details)
+            ? error.details
+            : [];
+        const invalidKey =
+          code === "invalid_api_key" ||
+          details.some(
+            (d) =>
+              d &&
+              typeof d === "object" &&
+              "reason" in d &&
+              d.reason === "API_KEY_INVALID",
+          );
+        const name = groq ? "Groq" : "Gemini API";
+        const keyName = groq ? "GROQ_API_KEY" : "GEMINI_API_KEY";
+        const modelName = groq ? "GROQ_MODEL" : "GEMMA_MODEL";
+        if (response.status === 401 || invalidKey)
+          throw new ProviderError(
+            `${name} rejected its API key. Update ${keyName} in Vercel's Production environment, then redeploy.`,
+            503,
+          );
+        if (
+          response.status === 404 ||
+          code === "model_not_found" ||
+          code === "model_decommissioned"
+        )
+          throw new ProviderError(
+            `${name} model ${model} is unavailable or retired. Check ${modelName} and current free-tier model access, then redeploy.`,
+            503,
+          );
+        if (response.status === 403)
+          throw new ProviderError(
+            `${name} denied access to ${model}. Check the key's project permissions, API access and free-tier eligibility.`,
+            503,
+          );
         throw new ProviderError(
-          "The provider rejected the request. Check server credentials, model availability and free-tier eligibility.",
+          `${name} rejected the game request (HTTP ${response.status}). Check the configured model and provider account settings.`,
+          502,
         );
+      }
       const raw = await response.text();
       if (raw.length > 64000)
         throw new ProviderError(
