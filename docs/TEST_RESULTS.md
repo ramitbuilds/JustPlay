@@ -1,3 +1,11 @@
+# 2D playability repair — 2026-10-31
+
+Submission scope is 2D, following the user's deadline. Added reusable original MIT sprites, direct native control hints, multitouch-safe controls, numeric gameplay inspection and per-control input checks with deterministic baseline comparisons. New games require these checks; one repair receives actual failure details.
+
+Local browser checks passed for real two-finger drive-and-steer, sprite rendering, no-op control rejection and the sandbox security/CSP/error cases. Native HTTP/browser generation/edit/history/save checks passed with mocked Google inference. Typecheck, lint, unit tests, production build and emitted Node HTTP smoke are checked before push. Live generation is recorded separately once the deployed code is verified; no guarantee of perfect games is made.
+
+---
+
 # Generation timeout regression — 2026-10-31
 
 Reproduced a live provider HTTP 500 in 0.7 seconds. This establishes a transient/upstream failure in addition to the code's premature 25-second cutoff; it does not establish the precise cause of the user's earlier timeout.
