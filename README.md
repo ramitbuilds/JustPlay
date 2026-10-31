@@ -2,26 +2,21 @@
 
 Create and remix small 2D arcade games with AI.
 
-**Describe your game. Play it immediately.** An original browser game studio with five playable Phaser families, validated AI designs, conversational revisions and a local library. Generation speed and visual quality depend on the provider and the constrained design space; no credentials are required to play the labeled local examples.
+**Describe your game. Play it immediately.** AI writes the game's JavaScript mechanics and procedural artwork, which run in an isolated Canvas player. There are no keyword routes, fixed game families or substitute templates in new generation. Complex ideas become small 2D prototypes; quality and availability depend on the model and free quota.
 
-![JustPlay home](docs/screenshots/home-desktop.png)
+**[Open JustPlay](https://justplay-olive-eta.vercel.app/)**
 
 ## What works
 
-- **Crystalwood**: a fox platformer with crystals, patrol enemies, double jump and a forest gate.
-- **Neon Drift**: an accelerating rooftop runner with obstacles and a distance objective.
-- **The Last Lantern**: top-down survival with chasing enemies, health and automatic projectiles.
-- **Court Craft**: basketball aiming, charged ballistic shots, rim/backboard collisions and basket scoring.
-- **Midsummer Sixes**: timed cricket batting, deliveries, boundaries and wickets.
-- Five original pixel worlds, animated local sprites, parallax, particles, sound opt-in, keyboard/touch input, pause/restart/fullscreen and win/loss states.
-- Strict Zod GameSpec pipeline; separate Groq and Gemini/Gemma 4 adapters; server-only credentials, request bounds, timeout/repair/quota errors and a Cloudflare rate-limit binding.
-- Studio edits, immutable version history, IndexedDB saves/reopen/delete, JSON export/import.
-
-**[Open JustPlay](https://justplay-olive-eta.vercel.app/)** — live Groq generation, browser gameplay and a difficulty edit were verified on Vercel. Gemma remains adapter-tested only. Authored local examples and their four deterministic edit suggestions are explicitly labeled; arbitrary prompts use the server proxy and available provider quota.
+- Original source generation through Google AI Studio’s native Gemini API using Gemma 4. Groq remains an explicit optional adapter.
+- Syntax validation, isolated startup probing and one AI repair attempt.
+- Keyboard/pointer input, mobile controls generated from the game manifest, pause/restart/fullscreen and sound opt-in.
+- Natural-language source patches, immutable history, actual source viewer, local saves, JSON export/import.
+- Legacy saved games remain playable; they are not used to answer new requests.
 
 ## Deploy on Vercel
 
-Deploy the repository root on the Vite preset using the included `vercel.json`; `api/generate.ts` runs the AI proxy on Vercel. Add `AI_PROVIDER=groq`, `GROQ_API_KEY` and optionally `GROQ_MODEL=openai/gpt-oss-20b` as server-only Production variables, then redeploy. Gemma is also supported. See [exact deployment steps](docs/DEPLOYMENT.md#vercel-current-deployment). `wrangler.jsonc` variables apply only to Cloudflare.
+Deploy the repository root on the Vite preset using the included `vercel.json`; `api/generate.ts` runs the AI proxy on Vercel. Add `AI_PROVIDER=gemma`, `GEMINI_API_KEY` from [Google AI Studio](https://aistudio.google.com/apikey), and `GEMMA_MODEL=gemma-4-26b-a4b-it` as server-only Production variables, then redeploy. No Groq key is needed. See [exact deployment steps](docs/DEPLOYMENT.md#vercel-current-deployment). `wrangler.jsonc` variables apply only to Cloudflare.
 
 ## Run in a development/cloud workspace
 
@@ -30,7 +25,7 @@ npm ci
 npm run dev
 ```
 
-This opens the frontend on port 5173. For the complete local server, use `npm run dev:full`; `.dev.vars` may hold secure server bindings and is ignored by git. Use only eligible free provider projects with billing disabled. [Deployment](docs/DEPLOYMENT.md) includes mobile-friendly dashboard steps. Never expose keys in `VITE_` variables.
+This opens the frontend on port 5173; generation needs the server proxy. For the complete local server, use `npm run dev:full`; `.dev.vars` may hold secure server bindings and is ignored by git. Use only eligible free provider projects with billing disabled. [Deployment](docs/DEPLOYMENT.md) includes mobile-friendly dashboard steps. Never expose keys in `VITE_` variables.
 
 ```sh
 npm run typecheck
@@ -41,13 +36,11 @@ npm run test:e2e
 npm run deploy:check
 ```
 
-## Supported ideas
+## Game ideas and controls
 
-The AI designs within **platformer, runner, survival, basketball shootout and cricket batting** runtimes. These are actual game families with different controls and objectives. Sports are single-player arcade challenges, not full team simulations. Requests for unsupported mechanics are declined; cricket and basketball are never accepted as renamed runners. The server checks family/theme intent and can ask the provider to repair mismatches once.
+Describe the rules, objective, setting and controls you want. The model writes a compact game within an 800×450 Canvas/Worker contract. It cannot use external libraries, network services or remote assets. Each generated game provides its own instructions and keyboard/touch controls. Pointer-only games use the canvas directly. Tab leaves the canvas; sound starts muted.
 
-## Controls
-
-Focus the game with **Play**. Move with **WASD/arrows**, jump with **Space** (double tap for double jump), dash with **Shift** when enabled, **J** to fire in side-view games with shooting. Survival auto-aims/fires. Mobile has direct touch buttons. **Tab** leaves the canvas; text editing does not capture game keys. Basketball: arrows adjust aim, hold/release Space (or the touch shot button) to charge/shoot. Cricket: tap Space when the delivery reaches the batting zone. Sound starts muted. Gold crystals restore health.
+AI code can fail or misunderstand a request. Syntax/startup checks and repairs improve reliability but cannot prove gameplay quality. Failures stay visible. The app never silently loads a preset instead.
 
 ## Project notes
 

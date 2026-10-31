@@ -1,3 +1,5 @@
+> Historical report. The source-generation change supersedes preset-family generation described below. See [AI_PIPELINE.md](AI_PIPELINE.md) and [ARCHITECTURE.md](ARCHITECTURE.md) for the current implementation.
+
 # Pixel worlds and game feel
 
 Polish comes from authored silhouettes, restricted palettes, layered environments, consistent pixel density, animation timing and feedback. JustPlay uses original locally authored pixel sprites, coherent forest/neon/dungeon palettes, silhouettes at three depths, foreground tiles, environmental props, collectible bobbing, squash feedback, particles, camera following and synthesized sound. World geometry is generated separately from decoration. Ground routes remain continuous; optional platforms do not gate completion.

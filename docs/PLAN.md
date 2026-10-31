@@ -42,3 +42,7 @@ User reported every prompt becoming a neon runner. Live reproduction confirmed b
 ## Prompt fidelity completed
 
 Live cricket and basketball requests now produce matching validated sports games through Groq. Their actual browser scenes/controls were exercised with no page errors; cricket scored a run, and basketball shot/miss behavior worked. Unsupported chess is declined. Provider protocol was flattened for compatibility and JSON-decoding failures receive bounded repair. Sports instructions derive from real goals/wickets/misses. Physics QA corrected the shot guide’s fixed-step bias. Final checks: 65 unit/integration and 19 browser tests, typecheck/lint/build/NodeNext HTTP smoke. Existing keys and environment settings were reused.
+
+## Freeform generation follow-up
+
+User explicitly requested AI-written logic without keyword routing or hardcoded game families. Replace the constrained spec path with source/patch generation, isolate execution in an opaque iframe Worker, keep legacy saves, test source validation/runtime/input/editing/security, review official Groq SDK and Vercel guidelines, push main and verify live Groq output. Startup checks cannot guarantee semantic fidelity; record actual live observations separately.

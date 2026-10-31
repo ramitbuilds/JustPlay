@@ -1,15 +1,12 @@
 # Known limits
 
-- Workspace keys remain unavailable, but Vercel’s existing server-side Groq key was used successfully for live generation, gameplay and an edit, including separate cricket and basketball designs in the fidelity follow-up. Gemma remains mocked-adapter tested only. Account quotas and billing settings were not inspected; use only an eligible free account.
-- The user’s Vercel deployment is live and verified at https://justplay-olive-eta.vercel.app/. Cloudflare remains dry-run verified only; its authentication is unavailable.
-- REA MCP unavailable; Instaplay research used public HTML/bootstrap evidence. Its private backend and game quality are not established by this research. Groq documentation and Kenney download access returned 403.
-- Five constrained game families, five visual themes, four heroes, slime/bat enemies. Survival is top-down and has no jump mechanic. Runner uses endless-runner controls and increasing speed with a finite finish target. No arbitrary genres, multiplayer, user scripting or uploaded artwork.
-- Platform ground paths remain continuous. Optional ledges are bounded; crystals remain on the ground route. This favors reliability over varied platform puzzles. Original pixel animations are deliberately small 4-frame sets; there is no large commercial asset pack. Gold crystals restore one health. No checkpoints or complex power-up inventory.
-- Browser saves are local, versioned to 30 entries, and not synchronized. Export/import preserves one selected GameSpec, not the entire history. Imported games use explicit local fixture edits; custom AI edits are available for AI-created games.
-- Chromium desktop/mobile emulation tested; no physical iPhone, Safari, Firefox, screen reader or gamepad QA. Canvas gameplay itself is visual and is not fully screen-reader playable. Controls, mission, HUD and status have DOM descriptions. Synthesized sound verified in Chromium; no listening test or music.
-- Phaser is lazy loaded on studio entry but is still about 332 KB gzip. Vite emits its expected large-chunk warning and two upstream Zod annotation warnings. They do not block build.
-- Native Cloudflare rate limiting is approximate per location and IP, not a global budget or authentication system. Enable only on an eligible free inference project with billing disabled; no guarantee of unlimited free capacity.
-
-- Vercel’s no-dependency limiter is per warm instance, with finite memory and an instance-wide ceiling. It is not shared across cold starts or replicas. A free Hobby WAF rule can add edge enforcement; do not mistake instance throttling for a global budget.
-
-- Sports are arcade challenges: basketball has aim/power shots and basket scoring; cricket has timed batting and wickets. No team matches, dribbling, dunks, multiplayer or fielding simulation. The AI can report unsupported requests, and server family checks prevent sports-to-runner substitution. It still cannot invent arbitrary new runtime mechanics.
+- AI writes arbitrary game mechanics within a compact 2D Canvas/Worker contract. Large ideas become small single-player prototypes. No guarantee every prompt produces a good or faithful game; startup probing is not semantic or gameplay verification.
+- No DOM, external libraries, networking, remote artwork, multiplayer or uploaded assets inside generated games. The model draws artwork procedurally. Source/token/time budgets favor small games.
+- Creation can fail, and edits/repairs consume additional free inference quota. Oversized source may exceed edit budgets. Provider 429 errors remain visible; no silent preset or paid-provider fallback.
+- Groq rendered documentation pages returned 403; official SDK sources were inspected. Current account pricing/quota and billing configuration are not visible here. Keep billing disabled. Gemma remains mocked-adapter tested only.
+- Sandbox requires Worker, OffscreenCanvas transfer and Canvas2D. Chromium was tested; physical iPhone, Safari, Firefox, gamepad and screen-reader gameplay were not. Browser failures show repair/retry errors rather than an unrelated game.
+- Opaque iframe, CSP, dedicated Worker, bounded messages and watchdog isolate code from the app. They do not provide a hard memory cap or formal protection against browser vulnerabilities.
+- Saves are browser-local, at most 30 versions; no accounts or synchronization. Export/import preserves one selected version. Older preset-based saves remain playable as legacy content.
+- Canvas gameplay is visual. Instructions, generated control buttons, status and HUD have DOM text; full screen-reader playability depends on generated behavior and is not promised.
+- Vercel rate limiting is per warm instance, not shared across replicas/cold starts. Cloudflare's native binding is location scoped. Provider quotas remain the final usage bound.
+- Cloudflare was dry-run checked only. REA MCP was unavailable; earlier Instaplay research used public evidence and did not inspect its private backend.

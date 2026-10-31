@@ -1,3 +1,5 @@
+> Historical report. The source-generation change supersedes preset-family generation described below. See [AI_PIPELINE.md](AI_PIPELINE.md) and [ARCHITECTURE.md](ARCHITECTURE.md) for the current implementation.
+
 # Prompt fidelity repair
 
 ## Reproduced cause
