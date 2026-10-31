@@ -16,7 +16,7 @@ Earlier live requests showed two separate problems: a retired model setting and 
 
 ## Bounds and recovery
 
-Same-origin JSON only; prompt 3–6000 characters; streamed request at most 192 KiB. Source at most 40,000 characters; upstream response at most 350,000 characters. Two provider attempts maximum, 25-second timeout each. Completion budget up to 5400 tokens for creation and 3000 for edits, reduced for larger input; oversized edits fail with an actionable explanation. Browser request timeout 65 seconds. Free-tier TPM limits can still reject requests; 429 surfaces without automatic retries or provider switches. Model/key/access errors are classified without echoing raw upstream data or secrets.
+Same-origin JSON only; prompt 3–6000 characters; streamed request at most 192 KiB. Source at most 40,000 characters; upstream response at most 350,000 characters. Two provider attempts maximum, 105-second timeout each (headers and body), inside a 225-second overall generation budget. Completion budget up to 5400 tokens for creation and 3000 for edits, reduced for larger input; oversized edits fail with an actionable explanation. Browser request timeout 240 seconds. Vercel Fluid Compute is enabled in vercel.json with a 300-second maximum duration, within its documented Hobby limit. Free-tier TPM limits can still reject requests; 429 surfaces without automatic retries or provider switches. Transport failures and upstream HTTP 5xx can use the single remaining attempt; exhausted failures identify provider unavailability, timeout or connection failure separately. Model/key/access errors are classified without echoing raw upstream data or secrets.
 
 ## Google AI Studio / Gemma — selected provider
 
@@ -25,3 +25,11 @@ User requested Gemma directly instead of Groq. [Google's Gemma-on-Gemini-API gui
 The app defaults to `AI_PROVIDER=gemma` and `gemma-4-26b-a4b-it`. Requests go directly to `https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent` with `x-goog-api-key`, a real `systemInstruction`, user contents/parts and `thinkingConfig.thinkingLevel=minimal` (documented Gemma 4 thinking-off mode). No Groq/OpenAI message format, strict response schema or paid tools are sent to Google. Thought parts are excluded; MAX_TOKENS triggers one bounded repair. Google invalid-key details, missing access, unavailable models and quota errors have actionable messages. No automatic provider fallback.
 
 Native Google creation and source-patch editing are mocked-adapter and full HTTP/browser tested. No Google key was available for live inference; no live Gemma success is claimed. Credentials remain server-only.
+
+## Streaming and deployment deadlines
+
+Clients request `Accept: application/x-ndjson`. After origin, configuration, quota and input checks, the server immediately sends a progress event, then heartbeat events every 8 seconds, and one result or error event. Provider progress identifies the actual selected provider and retry. Heartbeats keep the HTTP connection active; they do not extend Vercel's execution limit. JSON-only callers remain supported.
+
+The native Node adapter flushes headers and pipes the response body with backpressure rather than buffering response.text(). Client disconnect aborts the Google request. The browser reads bounded fragmented UTF-8 lines, ignores heartbeats, validates the final game and preserves server errors. Streaming begins before inference finishes, not as a fabricated percentage of completion.
+
+[Vercel duration](https://vercel.com/docs/functions/configuring-functions/duration) and [limits](https://vercel.com/docs/functions/limitations) were checked: Fluid Compute supports 300 seconds on Hobby. The deployment schema confirms `fluid: true` enables Fluid Compute. No paid plan or separate service is required. Streamed errors use HTTP 200 with an explicit terminal error event/status because headers have already been sent. Server logs record provider/model, attempt, duration, HTTP status and upstream request ID; no key, prompt, generated source or raw upstream error is logged.

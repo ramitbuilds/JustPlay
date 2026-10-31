@@ -12,17 +12,20 @@ test("source creation, input, edit, history and persistence through native Verce
     .getByRole("button", { name: "Create my game", exact: true })
     .click();
   await expect(
-    page.getByRole("heading", { name: "Orbit painter", exact: true }),
+    page.getByRole("heading", { name: "Orbit painter", exact: true, level: 1 }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Play game", exact: true }).click();
-  await page.waitForTimeout(250);
+  await expect(
+    page.getByRole("button", { name: "Pause game", exact: true }),
+  ).toBeEnabled();
+  await expect(page.locator(".generated-hud")).toHaveText("Paint0");
   const canvas = page.frameLocator("iframe.code-frame").locator("canvas");
   await canvas.focus();
+  await expect(canvas).toBeFocused();
   for (let n = 0; n < 3; n++) {
-    await page.keyboard.down("Space");
-    await page.waitForTimeout(60);
-    await page.keyboard.up("Space");
-    await page.waitForTimeout(100);
+    await canvas.press("Space", { delay: 80 });
+    if (n < 2)
+      await expect(page.locator(".generated-hud")).toHaveText(`Paint${n + 1}`);
   }
   await expect(
     page.getByRole("heading", { name: "You did it." }),
@@ -78,4 +81,33 @@ test("native route method and origin guards", async ({ request }) => {
       })
     ).status(),
   ).toBe(403);
+});
+test("native HTTP response flushes progress before Google completes (mock upstream)", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const result = await page.evaluate(async () => {
+    const response = await fetch("/api/generate", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/x-ndjson",
+      },
+      body: JSON.stringify({ prompt: "Transport regression fixture" }),
+    });
+    const reader = response.body!.getReader(),
+      decoder = new TextDecoder();
+    const first = decoder.decode((await reader.read()).value);
+    let rest = "";
+    while (true) {
+      const part = await reader.read();
+      if (part.done) break;
+      rest += decoder.decode(part.value);
+    }
+    return { type: response.headers.get("content-type"), first, rest };
+  });
+  expect(result.type).toContain("application/x-ndjson");
+  expect(result.first).toContain('"type":"progress"');
+  expect(result.first).not.toContain('"type":"result"');
+  expect(result.rest).toContain('"type":"result"');
 });

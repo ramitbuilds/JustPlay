@@ -125,6 +125,7 @@ function App() {
         "Repair the runtime failure while preserving this game's intended rules and artwork.",
         game,
         failure instanceof Error ? failure.message : "Startup failed",
+        setPhase,
       );
       await probeGame(repaired);
       return repaired;
@@ -145,7 +146,9 @@ function App() {
     setError("");
     setPhase("AI is writing your game…");
     try {
-      const design = await checkAndRepair(await requestGame(prompt));
+      const design = await checkAndRepair(
+        await requestGame(prompt, undefined, undefined, setPhase),
+      );
       setPhase("Code checked. Loading your game…");
       setSession({
         id: crypto.randomUUID(),
@@ -194,7 +197,7 @@ function App() {
     try {
       const next = await checkAndRepair(
         isCodeGame(spec)
-          ? await requestGame(edit, spec, runtimeError || undefined)
+          ? await requestGame(edit, spec, runtimeError || undefined, setPhase)
           : await requestGame(session.prompt + "\nRequested changes: " + edit),
       );
       setRuntimeError("");

@@ -20,7 +20,7 @@ Create the key in [Google AI Studio](https://aistudio.google.com/apikey) using a
 
 Gemma is the default when `AI_PROVIDER` is absent; an old Groq key never selects Groq implicitly. An explicitly configured `AI_PROVIDER=groq` still selects that optional adapter, so update this variable when switching. There is no fallback to Groq on Google quota/errors. Optional Groq support uses `GROQ_API_KEY` and `GROQ_MODEL=openai/gpt-oss-20b` only with explicit `AI_PROVIDER=groq`.
 
-The included `vercel.json` sets **Vite**, build command `npm run build`, output directory `dist`, security headers and a 60-second function duration. Project Root Directory must be the repository root (leave it blank), because the native function lives in root `api/`. Remove any dashboard catch-all rewrite that redirects `/api/*` to `index.html`. Production Branch must be `main`; the user's project already has a Git integration, so pushing main should start deployment. No paid Vercel add-on or database is required.
+The included `vercel.json` sets **Vite**, build command `npm run build`, output directory `dist`, security headers, Fluid Compute enabled and a 300-second function duration. Project Root Directory must be the repository root (leave it blank), because the native function lives in root `api/`. Remove any dashboard catch-all rewrite that redirects `/api/*` to `index.html`. Production Branch must be `main`; the user's project already has a Git integration, so pushing main should start deployment. No paid Vercel add-on or database is required.
 
 The Vercel adapter supplies a bounded in-memory server limiter: 5 requests/minute per IP and 30/minute in total per warm instance. Counters reset on cold starts and are not shared across instances. For edge enforcement, Vercel's current [WAF rate limiting](https://vercel.com/docs/vercel-firewall/vercel-waf/rate-limiting) supports one rule on Hobby: configure path `/api/generate`, POST, 5 requests per 60 seconds per IP, then publish the rule. This is optional extra protection, not an environment binding. Its counters are regional; provider free quotas remain the final usage boundary. Keep inference billing disabled and verify free model eligibility before use.
 
@@ -67,3 +67,9 @@ Static headers enforce same-origin scripts, same-origin sandbox framing, no plug
 - Quota (429): wait for the account's free quota reset; retrying immediately or changing app UI does not reset Google's quota.
 
 No Google key was available in this workspace. Native request construction, code generation/editing responses, error handling and the full HTTP/browser path are tested with mocked Google responses. Live Google inference must be verified after adding the key to Vercel; no successful live Gemma request is claimed.
+
+## Generation timeout repair
+
+No new environment variables are required. The repository now enables Fluid Compute and maxDuration=300 in vercel.json, within Vercel's documented Hobby limit. New deployments receive this configuration automatically; keep AI_PROVIDER=gemma and the existing Google key/model. Provider attempts allow 105 seconds each within a total 225-second budget; the browser allows 240 seconds. Progress/heartbeat streaming avoids an idle connection and the native Node bridge no longer buffers the whole response. An optional retry handles transient Google 5xx/transport errors. Streaming does not remove server execution limits.
+
+A live pre-fix check returned provider HTTP 500 in 0.7 seconds, independently of timeout limits. Increasing duration alone cannot fix a persistent Google outage or quota error. Errors distinguish those cases; a quota failure is never automatically retried.

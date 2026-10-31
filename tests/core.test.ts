@@ -123,23 +123,21 @@ describe("source providers", () => {
     expect(body.generationConfig.thinkingConfig.thinkingLevel).toBe("minimal");
   });
   it("edits through Google directly and ignores thought parts", async () => {
-    const fetcher = vi
-      .fn()
-      .mockResolvedValue(
-        Response.json({
-          candidates: [
-            {
-              finishReason: "STOP",
-              content: {
-                parts: [
-                  { thought: true, text: "private reasoning" },
-                  { text: JSON.stringify(patch) },
-                ],
-              },
+    const fetcher = vi.fn().mockResolvedValue(
+      Response.json({
+        candidates: [
+          {
+            finishReason: "STOP",
+            content: {
+              parts: [
+                { thought: true, text: "private reasoning" },
+                { text: JSON.stringify(patch) },
+              ],
             },
-          ],
-        }),
-      );
+          },
+        ],
+      }),
+    );
     const result = await createProvider(
       { AI_PROVIDER: "gemma", GEMINI_API_KEY: "google-test" },
       fetcher,
@@ -199,7 +197,7 @@ describe("source providers", () => {
     ).rejects.toThrow("invalid source twice");
     expect(fetcher).toHaveBeenCalledTimes(2);
   });
-  it("does not retry quota or transport errors", async () => {
+  it("does not retry quota errors and classifies connection failures", async () => {
     for (const [response, status] of [
       [new Response("", { status: 429 }), 429],
     ] as const) {
@@ -217,7 +215,7 @@ describe("source providers", () => {
         { AI_PROVIDER: "groq", GROQ_API_KEY: "test" },
         vi.fn().mockRejectedValue(new Error("network")),
       ).generateGame("any idea"),
-    ).rejects.toMatchObject({ status: 504 });
+    ).rejects.toMatchObject({ status: 502 });
   });
 });
 describe("server request boundary", () => {

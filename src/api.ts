@@ -1,16 +1,22 @@
+import { CLIENT_TIMEOUT_MS } from "./generation-limits";
+import { readGameStream } from "./response-stream";
 import { validateCodeGame, type CodeGame } from "./code-game";
 export async function requestGame(
   prompt: string,
   current?: CodeGame,
   runtimeError?: string,
+  onProgress?: (message: string) => void,
 ): Promise<CodeGame> {
   let response: Response;
   try {
     response = await fetch("/api/generate", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/x-ndjson",
+      },
       body: JSON.stringify({ prompt, current, runtimeError }),
-      signal: AbortSignal.timeout(65000),
+      signal: AbortSignal.timeout(CLIENT_TIMEOUT_MS),
     });
   } catch (error) {
     if (
@@ -23,6 +29,31 @@ export async function requestGame(
     throw new Error(
       "Could not reach the game service. Check your connection and try again.",
     );
+  }
+  if (
+    response.ok &&
+    response.headers.get("Content-Type")?.includes("application/x-ndjson")
+  ) {
+    try {
+      return await readGameStream(response, onProgress);
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        ["TimeoutError", "AbortError"].includes(error.name)
+      )
+        throw Error(
+          "Generation exceeded the browser time budget. Please retry; your current game is unchanged.",
+        );
+      if (error instanceof TypeError)
+        throw Error(
+          "The connection to the game service ended during generation. Please retry; your current game is unchanged.",
+        );
+      if (error instanceof SyntaxError)
+        throw Error(
+          "The game service returned an unreadable generation stream. Please retry.",
+        );
+      throw error;
+    }
   }
   if (!response.headers.get("Content-Type")?.includes("application/json")) {
     if (response.status === 429)

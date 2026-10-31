@@ -1,3 +1,7 @@
+import {
+  PROVIDER_TIMEOUT_MS,
+  GENERATION_BUDGET_MS,
+} from "../generation-limits.js";
 import { z } from "zod";
 import {
   parseGameSource,
@@ -47,6 +51,10 @@ const patchRules =
 export function createProvider(
   env: ProviderEnv,
   fetcher: typeof fetch = fetch,
+  options: {
+    signal?: AbortSignal;
+    onProgress?: (message: string) => void;
+  } = {},
 ): AIProvider {
   const groq = env.AI_PROVIDER === "groq";
   if (!groq && env.AI_PROVIDER !== "gemma")
@@ -85,7 +93,22 @@ export function createProvider(
     runtimeError?: string,
   ): Promise<CodeGame> {
     let feedback = "";
+    const started = Date.now();
+    const name = groq ? "Groq" : "Google Gemma";
     for (let attempt = 0; attempt < 2; attempt++) {
+      const remaining = GENERATION_BUDGET_MS - (Date.now() - started);
+      if (remaining < 1000)
+        throw new ProviderError(
+          `${name} exceeded the generation time budget. Please retry.`,
+          504,
+        );
+      if (options.signal?.aborted)
+        throw new ProviderError("Generation was cancelled.", 499);
+      options.onProgress?.(
+        attempt
+          ? `${name} is retrying the request…`
+          : `${name} is writing the game source…`,
+      );
       const system = current ? patchRules : createRules;
       const user = JSON.stringify({
         request: prompt,
@@ -134,6 +157,13 @@ export function createProvider(
             },
           };
       let response: Response;
+      let raw: string;
+      const timeout = AbortSignal.timeout(
+        Math.min(PROVIDER_TIMEOUT_MS, remaining),
+      );
+      const signal = options.signal
+        ? AbortSignal.any([timeout, options.signal])
+        : timeout;
       try {
         response = await fetcher(url, {
           method: "POST",
@@ -144,24 +174,82 @@ export function createProvider(
               : { "x-goog-api-key": key! }),
           },
           body: JSON.stringify(body),
-          signal: AbortSignal.timeout(25000),
+          signal,
         });
-      } catch {
+        trace.requestId =
+          response.headers.get("x-request-id") ??
+          response.headers.get("x-goog-request-id");
+        // The deadline covers response headers AND the body; cap bytes while reading.
+        const reader = response.body?.getReader(),
+          decoder = new TextDecoder();
+        raw = "";
+        let bytes = 0;
+        if (reader) {
+          try {
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              bytes += value.byteLength;
+              if (bytes > 350000) {
+                await reader.cancel();
+                throw new ProviderError(
+                  "The provider response exceeded the source budget. Try a smaller idea.",
+                );
+              }
+              raw += decoder.decode(value, { stream: true });
+            }
+            raw += decoder.decode();
+          } finally {
+            reader.releaseLock();
+          }
+        }
+      } catch (error) {
+        if (error instanceof ProviderError) throw error;
+        if (options.signal?.aborted)
+          throw new ProviderError("Generation was cancelled.", 499);
+        console.warn("generation transport failure", {
+          provider: trace.provider,
+          model,
+          attempt: attempt + 1,
+          elapsedMs: Date.now() - started,
+          timedOut: timeout.aborted,
+        });
+        if (attempt === 0) continue;
         throw new ProviderError(
-          "The AI request timed out or lost connection. Try a smaller game idea or try again shortly.",
-          504,
+          timeout.aborted
+            ? `${name} did not finish within the generation time budget. Please retry; your current game is unchanged.`
+            : `The server could not maintain its connection to ${name}. Please retry; your current game is unchanged.`,
+          timeout.aborted ? 504 : 502,
         );
       }
-      trace.requestId =
-        response.headers.get("x-request-id") ??
-        response.headers.get("x-goog-request-id");
+      if (response.status >= 500) {
+        console.warn("generation upstream failure", {
+          provider: trace.provider,
+          model,
+          status: response.status,
+          attempt: attempt + 1,
+          requestId: trace.requestId,
+          elapsedMs: Date.now() - started,
+        });
+        if (attempt === 0) continue;
+        throw new ProviderError(
+          `${name} is temporarily unavailable (HTTP ${response.status}) after a retry. Please try again shortly.`,
+          503,
+        );
+      }
       if (response.status === 429)
         throw new ProviderError(
           "Free inference quota reached. Wait for the provider quota to reset before trying again. No replacement game was loaded.",
           429,
         );
       if (!response.ok) {
-        const data: unknown = await response.json().catch(() => null);
+        const data: unknown = (() => {
+          try {
+            return JSON.parse(raw);
+          } catch {
+            return null;
+          }
+        })();
         const e =
           data && typeof data === "object" && "error" in data
             ? data.error
@@ -212,11 +300,6 @@ export function createProvider(
           `The provider rejected the request (HTTP ${response.status}). Check its model settings and request limits.`,
         );
       }
-      const raw = await response.text();
-      if (raw.length > 350000)
-        throw new ProviderError(
-          "The provider returned more source than the game budget allows. Try a smaller idea.",
-        );
       try {
         const data = JSON.parse(raw);
         const text = groq

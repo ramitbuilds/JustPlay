@@ -25,6 +25,7 @@ globalThis.fetch = async (url, options) => {
     !body.systemInstruction
   )
     throw Error("Invalid Google request");
+  await new Promise((resolve) => setTimeout(resolve, 400));
   return Response.json({
     candidates: [
       {

@@ -43,7 +43,12 @@ export async function onRequest({
   if (!request.headers.get("Content-Type")?.startsWith("application/json"))
     return json({ error: "Send a JSON game request." }, 415);
   try {
-    const provider = createProvider(env);
+    const cancelled = new AbortController();
+    let report: (message: string) => void = () => {};
+    const provider = createProvider(env, fetch, {
+      signal: AbortSignal.any([request.signal, cancelled.signal]),
+      onProgress: (message) => report(message),
+    });
     if (!env.AI_RATE_LIMITER)
       return json(
         {
@@ -85,10 +90,67 @@ export async function onRequest({
       JSON.parse(new TextDecoder().decode(merged)),
     );
     if (input.current) validateCodeGame(input.current);
-    const spec = input.current
-      ? await provider.editGame(input.current, input.prompt, input.runtimeError)
-      : await provider.generateGame(input.prompt);
-    return json({ game: spec, trace: provider.trace });
+    const generate = () =>
+      input.current
+        ? provider.editGame(input.current, input.prompt, input.runtimeError)
+        : provider.generateGame(input.prompt);
+    if (request.headers.get("Accept")?.includes("application/x-ndjson")) {
+      const encoder = new TextEncoder();
+      let closed = false;
+      let timer: ReturnType<typeof setInterval> | undefined;
+      const stream = new ReadableStream<Uint8Array>({
+        start(controller) {
+          const emit = (value: unknown) => {
+            if (!closed)
+              controller.enqueue(encoder.encode(JSON.stringify(value) + "\n"));
+          };
+          report = (message) => emit({ type: "progress", message });
+          emit({
+            type: "progress",
+            message: "Generation started. Waiting for the AI provider…",
+          });
+          timer = setInterval(() => emit({ type: "heartbeat" }), 8000);
+          void generate()
+            .then((game) =>
+              emit({ type: "result", game, trace: provider.trace }),
+            )
+            .catch((error) =>
+              emit({
+                type: "error",
+                error:
+                  error instanceof ProviderError
+                    ? error.message
+                    : "The game request could not be processed. Please retry.",
+                status: error instanceof ProviderError ? error.status : 500,
+              }),
+            )
+            .finally(() => {
+              clearInterval(timer);
+              report = () => {};
+              if (!closed) {
+                closed = true;
+                controller.close();
+              }
+            });
+        },
+        cancel() {
+          closed = true;
+          cancelled.abort();
+          clearInterval(timer);
+          report = () => {};
+        },
+      });
+      return new Response(stream, {
+        headers: {
+          "Content-Type": "application/x-ndjson; charset=utf-8",
+          "Cache-Control": "no-store, no-transform",
+          "X-Content-Type-Options": "nosniff",
+          "X-Accel-Buffering": "no",
+        },
+      });
+    }
+    const game = await generate();
+    return json({ game, trace: provider.trace });
   } catch (error) {
     if (error instanceof ProviderError)
       return json({ error: error.message }, error.status);

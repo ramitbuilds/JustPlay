@@ -1,3 +1,13 @@
+# Generation timeout regression — 2026-10-31
+
+Reproduced a live provider HTTP 500 in 0.7 seconds. This establishes a transient/upstream failure in addition to the code's premature 25-second cutoff; it does not establish the precise cause of the user's earlier timeout.
+
+Provider deadlines now cover headers and body, with 105 seconds per attempt and 225 seconds total. Client deadline is 240 seconds; Vercel Fluid Compute is explicitly enabled with a supported 300-second maximum. The native handler streams progress/8-second heartbeats and the final result/error with backpressure. Cancellation propagates upstream. Temporary provider errors receive at most one retry; quota errors do not.
+
+61 unit tests pass, including a fake-clock Google response after 30 seconds (past the old cutoff), transient 500 recovery, exhausted 503 classification, no retry after cancellation, progress delivery before inference finishes, fragmented UTF-8 event parsing and incomplete/error streams. Typecheck, lint, production build and emitted Node HTTP smoke pass. All 3 native HTTP/browser tests passed, including a delayed mocked Google response that proves progress arrives before inference completes, plus actual source play/edit/history/save/mobile checks and method/origin guards. No template or substitute game is generated on failure.
+
+---
+
 # Source generation and direct Gemma setup — 2026-10-31
 
 Current implementation replaces keyword/family selection with AI-written source and exact-source edits. Google AI Studio's Gemini API using Gemma 4 is the default; there is no Groq fallback. The historical results below describe earlier versions.
