@@ -34,3 +34,7 @@ The user deployed to Vercel, reported a missing API, and authorized working dire
 ## Vercel follow-up completed
 
 The automatic Vercel deployment now serves the native Node API. Live Groq creation produced Fox Crystal Quest, browser controls collected two crystals with no page errors, and a live edit changed only difficulty (1 to 2). Updated the retired Groq default and normalized its legacy environment setting; strict JSON-schema output resolves invalid designs. Final tests: 49 unit/integration, 12 browser, NodeNext emitted-runtime HTTP smoke, typecheck/lint/build. Workspace secrets were never required or exposed.
+
+## Prompt fidelity follow-up
+
+User reported every prompt becoming a neon runner. Live reproduction confirmed basketball/cricket were forced into the old three-family schema, with misleading sport descriptions. Added two actual sports runtimes, structured support/decline decisions, explicit family hints and semantic prompt checks. Local verification: 60 unit/integration tests, 15 gameplay/UI browser tests, 3 native HTTP browser tests, NodeNext smoke/typecheck/lint/build. No new dependencies, paid assets or credentials. Deploy on main and verify both real sports prompts next.

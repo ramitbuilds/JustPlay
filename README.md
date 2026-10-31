@@ -1,8 +1,8 @@
 # JustPlay
 
-Describe your game in a few words and AI generates a professional 2D game in seconds.
+Create and remix small 2D arcade games with AI.
 
-**Describe your game. Play it immediately.** An original browser game studio with three playable Phaser families, validated AI designs, conversational revisions and a local library. Generation speed and visual quality depend on the provider and the constrained design space; no credentials are required to play the labeled local examples.
+**Describe your game. Play it immediately.** An original browser game studio with five playable Phaser families, validated AI designs, conversational revisions and a local library. Generation speed and visual quality depend on the provider and the constrained design space; no credentials are required to play the labeled local examples.
 
 ![JustPlay home](docs/screenshots/home-desktop.png)
 
@@ -11,7 +11,9 @@ Describe your game in a few words and AI generates a professional 2D game in sec
 - **Crystalwood**: a fox platformer with crystals, patrol enemies, double jump and a forest gate.
 - **Neon Drift**: an accelerating rooftop runner with obstacles and a distance objective.
 - **The Last Lantern**: top-down survival with chasing enemies, health and automatic projectiles.
-- Three original pixel worlds, animated local sprites, parallax, particles, sound opt-in, keyboard/touch input, pause/restart/fullscreen and win/loss states.
+- **Court Craft**: basketball aiming, charged ballistic shots, rim/backboard collisions and basket scoring.
+- **Midsummer Sixes**: timed cricket batting, deliveries, boundaries and wickets.
+- Five original pixel worlds, animated local sprites, parallax, particles, sound opt-in, keyboard/touch input, pause/restart/fullscreen and win/loss states.
 - Strict Zod GameSpec pipeline; separate Groq and Gemini/Gemma 4 adapters; server-only credentials, request bounds, timeout/repair/quota errors and a Cloudflare rate-limit binding.
 - Studio edits, immutable version history, IndexedDB saves/reopen/delete, JSON export/import.
 
@@ -39,9 +41,13 @@ npm run test:e2e
 npm run deploy:check
 ```
 
+## Supported ideas
+
+The AI designs within **platformer, runner, survival, basketball shootout and cricket batting** runtimes. These are actual game families with different controls and objectives. Sports are single-player arcade challenges, not full team simulations. Requests for unsupported mechanics are declined; cricket and basketball are never accepted as renamed runners. The server checks family/theme intent and can ask the provider to repair mismatches once.
+
 ## Controls
 
-Focus the game with **Play**. Move with **WASD/arrows**, jump with **Space** (double tap for double jump), dash with **Shift** when enabled, **J** to fire in side-view games with shooting. Survival auto-aims/fires. Mobile has direct touch buttons. **Tab** leaves the canvas; text editing does not capture game keys. Sound starts muted. Gold crystals restore health.
+Focus the game with **Play**. Move with **WASD/arrows**, jump with **Space** (double tap for double jump), dash with **Shift** when enabled, **J** to fire in side-view games with shooting. Survival auto-aims/fires. Mobile has direct touch buttons. **Tab** leaves the canvas; text editing does not capture game keys. Basketball: arrows adjust aim, hold/release Space (or the touch shot button) to charge/shoot. Cricket: tap Space when the delivery reaches the batting zone. Sound starts muted. Gold crystals restore health.
 
 ## Project notes
 

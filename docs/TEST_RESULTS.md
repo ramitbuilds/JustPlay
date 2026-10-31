@@ -1,6 +1,18 @@
 # Verification — 2026-10-31
 
-## Current Vercel result
+## Prompt fidelity and sports regression
+
+- Reproduced live: cricket returned a renamed neon platformer; basketball returned a renamed neon runner. The previous schema could not express sports mechanics.
+- Added real basketball and cricket runtimes and a supported/unsupported AI decision. Family/theme/mechanic checks reject unrelated designs and feed bounded repair.
+- **60 unit/integration tests passed**, including rejection of a canned Neon Dash response for cricket/basketball, valid sports designs, mismatch repair, unsupported requests and edit-family preservation.
+- **15 browser gameplay/UI tests passed**, including basketball scoring/win/loss/restart, cricket boundaries/wickets/win/loss/restart and mobile shot charging.
+- **3 native Vercel HTTP browser tests passed**, including both sport creation requests and edits. Upstream responses are mocked only in these local tests.
+- NodeNext emitted-server HTTP smoke, typecheck, lint and production build passed.
+- Inspected basketball/cricket canvas and mobile studio screenshots. Sports-specific instructions, score units, action buttons and edit suggestions replace irrelevant platformer controls.
+
+Production checks will follow the main deployment; these local results do not establish live model prompt fidelity by themselves.
+
+## Vercel API compatibility result
 
 **Live app:** https://justplay-olive-eta.vercel.app/
 
