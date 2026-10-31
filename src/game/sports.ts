@@ -268,10 +268,11 @@ export class SportsController {
         const angle = Phaser.Math.DegToRad(this.aim),
           distance = this.hoopX - this.ball.x,
           height = this.ball.y - this.hoopY;
-        const v = Math.sqrt(
-          (600 * distance * distance) /
-            (2 * Math.cos(angle) ** 2 * (distance * Math.tan(angle) - height)),
-        );
+        // Arcade integrates gravity before position; include its half-step bias.
+        const a = distance * Math.tan(angle) - height;
+        const b = ((300 / s.physics.world.fps) * distance) / Math.cos(angle);
+        const c = (300 * distance * distance) / Math.cos(angle) ** 2;
+        const v = (b + Math.sqrt(b * b + 4 * a * c)) / (2 * a);
         this.targetPower = Phaser.Math.Clamp((v - 320) / 360, 0.06, 0.94);
         if (input.action) {
           this.phase = "charging";
@@ -345,7 +346,10 @@ export class SportsController {
           const time = i * 0.055;
           this.meter.fillCircle(
             this.ball.x + Math.cos(angle) * v * time,
-            this.ball.y - Math.sin(angle) * v * time + 300 * time * time,
+            this.ball.y -
+              Math.sin(angle) * v * time +
+              300 * time * time +
+              (300 / s.physics.world.fps) * time,
             1.2,
           );
         }
