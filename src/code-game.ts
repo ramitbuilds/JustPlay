@@ -1,3 +1,4 @@
+import { assetIds } from "./asset-catalog.js";
 import { z } from "zod";
 import { parse } from "acorn";
 export const ControlSchema = z
@@ -8,10 +9,55 @@ export const ControlSchema = z
       .min(1)
       .max(24)
       .regex(/^[A-Za-z0-9]+$/),
+    description: z.string().max(120).optional(),
+  })
+  .strict();
+const nativeKey =
+  /^(?:Key[A-Z]|Digit[0-9]|Numpad[0-9]|Arrow(?:Up|Down|Left|Right)|Space|Enter|ShiftLeft|ShiftRight|ControlLeft|ControlRight|AltLeft|AltRight|Escape|Backspace|Tab)$/;
+export const VerificationSchema = z
+  .object({
+    name: z.string().min(1).max(100),
+    control: z.string().max(24),
+    metric: z.string().regex(/^[A-Za-z][A-Za-z0-9_]{0,31}$/),
+    steps: z
+      .array(
+        z
+          .object({
+            frames: z.number().int().min(1).max(180),
+            keys: z
+              .array(ControlSchema.shape.key.regex(nativeKey))
+              .max(8)
+              .default([]),
+            pointer: z
+              .object({
+                x: z.number().min(0).max(800),
+                y: z.number().min(0).max(450),
+                down: z.boolean().optional(),
+              })
+              .optional(),
+          })
+          .strict(),
+      )
+      .min(1)
+      .max(4),
   })
   .strict();
 export const GameManifestSchema = z
   .object({
+    runtimeVersion: z.literal(2).optional(),
+    renderer: z.literal("canvas2d").optional(),
+    assets: z
+      .array(
+        z.enum(
+          assetIds as [
+            (typeof assetIds)[number],
+            ...(typeof assetIds)[number][],
+          ],
+        ),
+      )
+      .max(16)
+      .optional(),
+    verification: z.array(VerificationSchema).max(8).optional(),
     title: z.string().trim().min(1).max(80),
     description: z.string().max(320),
     instructions: z.string().min(1).max(600),
@@ -58,6 +104,35 @@ export function validateCodeGame(raw: unknown): CodeGame {
     );
   if (new Set(game.controls.map((c) => c.key)).size !== game.controls.length)
     throw new Error("Each displayed control must use a unique key.");
+  if (game.runtimeVersion === 2) {
+    if (game.controls.some((control) => !nativeKey.test(control.key)))
+      throw Error(
+        "Use actual KeyboardEvent.code controls; pointer games use an empty controls array.",
+      );
+    if (!game.renderer || !game.verification?.length)
+      throw Error(
+        "New games require a renderer and input verification scenarios.",
+      );
+    for (const control of game.controls)
+      if (
+        !game.verification.some(
+          (check) =>
+            check.control === control.key &&
+            check.steps.some((step) => step.keys.includes(control.key)),
+        )
+      )
+        throw Error(
+          `Missing input verification for ${control.label} (${control.key}).`,
+        );
+    for (const check of game.verification)
+      if (
+        check.control !== "pointer" &&
+        !game.controls.some((control) => control.key === check.control)
+      )
+        throw Error(
+          "Verification must name an actual declared control or pointer.",
+        );
+  }
   return game;
 }
 export function parseGameSource(raw: string): CodeGame {
@@ -70,7 +145,7 @@ export function parseGameSource(raw: string): CodeGame {
   if (!text.startsWith("/*JUSTPLAY"))
     throw new Error("Begin with the /*JUSTPLAY JSON manifest */ comment.");
   const end = text.indexOf("*/");
-  if (end < 0 || end > 4000)
+  if (end < 0 || end > 12000)
     throw new Error("The game manifest is missing or too large.");
   const manifest = GameManifestSchema.parse(
     JSON.parse(text.slice("/*JUSTPLAY".length, end).trim()),
@@ -91,5 +166,10 @@ export function applyCodePatch(current: CodeGame, raw: unknown): CodeGame {
       );
     code = code.replace(patch.find, () => patch.replace);
   }
-  return validateCodeGame({ ...manifest, format: "justplay-code-v1", code });
+  return validateCodeGame({
+    ...current,
+    ...manifest,
+    format: "justplay-code-v1",
+    code,
+  });
 }

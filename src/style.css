@@ -1604,3 +1604,12 @@ footer > a:last-child {
 .example-heading h2 {
   overflow-wrap: anywhere;
 }
+.generated-controls button {
+  flex-direction: column;
+  gap: 2px;
+  min-width: 76px;
+}
+.generated-controls small {
+  font-size: 10px;
+  opacity: 0.65;
+}

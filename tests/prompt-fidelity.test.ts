@@ -57,3 +57,30 @@ describe("generated source boundary", () => {
     expect(next.code).toContain("const color='$&';");
   });
 });
+it("new artifacts reject fake pointer buttons and uncovered actions", () => {
+  expect(() =>
+    validateCodeGame({
+      ...game,
+      controls: [{ label: "Move", key: "Pointer" }],
+    }),
+  ).toThrow("actual KeyboardEvent");
+  expect(() =>
+    validateCodeGame({
+      ...game,
+      controls: [
+        { label: "Paint", key: "Space" },
+        { label: "Unused", key: "KeyX" },
+      ],
+    }),
+  ).toThrow("Missing input verification");
+});
+it("source patches preserve asset and input-test metadata when omitted", () => {
+  const partial = { ...patch };
+  delete (partial as { runtimeVersion?: number }).runtimeVersion;
+  delete (partial as { verification?: unknown }).verification;
+  delete (partial as { renderer?: string }).renderer;
+  const next = applyCodePatch(game, partial);
+  expect(next.runtimeVersion).toBe(2);
+  expect(next.verification).toEqual(game.verification);
+  expect(next.renderer).toBe("canvas2d");
+});

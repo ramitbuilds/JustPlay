@@ -1,0 +1,1 @@
+Original JustPlay SVG sprite artwork. MIT license, see repository LICENSE.

@@ -19,52 +19,8 @@
     workerUrl = null;
     playing = false;
   };
-  const workerHost = `
-"use strict";
-(() => {
- const post=self.postMessage.bind(self);
- const nativeSetInterval=self.setInterval.bind(self);
- const now=performance.now.bind(performance);
- // Remove ambient capabilities before running untrusted source. CSP independently blocks network.
- for(const name of ['Worker','SharedWorker','fetch','WebSocket','WebTransport','EventSource','XMLHttpRequest','importScripts','indexedDB','caches','BroadcastChannel']){
-   for(let object=self;object;object=Object.getPrototypeOf(object)){
-     if(Object.prototype.hasOwnProperty.call(object,name)){try{Object.defineProperty(object,name,{value:undefined,writable:false,configurable:false});}catch{}}
-   }
- }
- const input={keys:Object.create(null),pressed:Object.create(null),pointer:{x:400,y:225,down:false,pressed:false,released:false}};
- let game=null,canvas=null,ctx=null,paused=true,last=0,frames=0,lastHud=-Infinity,lastSound=0;
- const api=Object.freeze({
-   setHud(value){if(!value||typeof value!=='object'||now()-lastHud<40)return;lastHud=now();post({type:'hud',status:String(value.status??'').slice(0,220),stats:Array.isArray(value.stats)?value.stats.slice(0,6).map(x=>({label:String(x?.label??'').slice(0,24),value:String(x?.value??'').slice(0,40)})):[]});},
-   finish(outcome,message){if(outcome!=='won'&&outcome!=='lost')return;paused=true;post({type:'finish',outcome,message:String(message??'').slice(0,240)});},
-   sound(frequency=440,duration=.08){if(now()-lastSound<100)return;lastSound=now();post({type:'sound',frequency:Math.max(60,Math.min(1800,Number(frequency)||440)),duration:Math.max(.02,Math.min(.25,Number(duration)||.08))});}
- });
- self.onmessage=event=>{
-  const value=event.data;
-  if(value.type==='init'){
-   canvas=value.canvas;ctx=canvas.getContext('2d');
-   try{game=__JUSTPLAY_FACTORY__({canvas,ctx,input,api});if(!game||typeof game.update!=='function'||typeof game.render!=='function')throw new Error('createGame must return update(dt) and render().');game.render();post({type:'ready'});last=now();}
-   catch(error){post({type:'error',message:String(error?.message??error).slice(0,700)});}
-  }
-  if(value.type==='playing'){paused=!value.playing;last=now();input.keys=Object.create(null);input.pressed=Object.create(null);input.pointer.down=false;post({type:'playing',playing:!paused});}
-  if(value.type==='release'){input.keys=Object.create(null);input.pressed=Object.create(null);input.pointer.down=false;}
-  if(value.type==='key'){if(value.down&&!input.keys[value.key])input.pressed[value.key]=true;input.keys[value.key]=!!value.down;}
-  if(value.type==='pointer'){const pressed=input.pointer.pressed||value.pointer.pressed,released=input.pointer.released||value.pointer.released;Object.assign(input.pointer,value.pointer,{pressed,released});}
- };
- nativeSetInterval(()=>{
-  if(!game)return;
-  const time=now(),dt=Math.max(0,Math.min(.05,(time-last)/1000));last=time;
-  try{
-   if(!paused){game.update(dt);game.render();input.pressed=Object.create(null);input.pointer.pressed=false;input.pointer.released=false;frames++;}
-   post({type:'beat',frames});
-   if(frames===12&&canvas){
-    frames++;const thumb=new OffscreenCanvas(320,180);thumb.getContext('2d').drawImage(canvas,0,0,320,180);
-    thumb.convertToBlob({type:'image/png'}).then(blob=>{const data=new FileReaderSync().readAsDataURL(blob);if(data.length<180000)post({type:'thumbnail',data});}).catch(()=>{});
-   }
-  }catch(error){paused=true;game=null;post({type:'error',message:String(error?.message??error).slice(0,700)});}
- },16);
-})();
-`;
-  function start(code) {
+  function start(bundle) {
+    const { code, engineSource, manifest, images, models, probe } = bundle;
     stop();
     if (typeof code !== "string" || code.length > 40000) {
       send("error", {
@@ -73,10 +29,15 @@
       return;
     }
     // Source is appended as a function expression only inside the isolated Worker blob.
-    const source = workerHost.replace(
-      "__JUSTPLAY_FACTORY__",
-      () => "(() => {\n" + code + "\n; return createGame; })()",
-    );
+    if (typeof engineSource !== "string" || engineSource.length > 2500000) {
+      send("error", { message: "The trusted game engine is missing." });
+      return;
+    }
+    const source =
+      engineSource +
+      "\n(() => {\n" +
+      code +
+      "\n; self.justplayBoot(createGame); })();";
     const blob = new Blob([source], { type: "text/javascript" });
     workerUrl = URL.createObjectURL(blob);
     try {
@@ -102,6 +63,10 @@
         if (data.type === "beat") {
           lastBeat = performance.now();
           send("beat", { frames: Number(data.frames) || 0 });
+          return;
+        }
+        if (data.type === "verified") {
+          send("verified", { checks: Number(data.checks) || 0 });
           return;
         }
         if (data.type === "playing") {
@@ -187,7 +152,14 @@
         stop();
       };
       const offscreen = canvas.transferControlToOffscreen();
-      worker.postMessage({ type: "init", canvas: offscreen }, [offscreen]);
+      worker.postMessage(
+        { type: "init", canvas: offscreen, manifest, images, models, probe },
+        [
+          offscreen,
+          ...images.map((item) => item.bitmap),
+          ...models.map((item) => item.buffer),
+        ],
+      );
     } catch (error) {
       send("error", { message: String(error?.message ?? error).slice(0, 700) });
       stop();
@@ -203,7 +175,7 @@
     const data = event.data;
     if (data.type === "init" && !channel) {
       channel = data.channel;
-      start(data.code);
+      start(data);
       return;
     }
     if (data.channel !== channel) return;

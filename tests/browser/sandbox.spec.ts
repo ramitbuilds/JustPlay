@@ -18,7 +18,7 @@ async function check(page: import("@playwright/test").Page, code: string) {
         return String(error);
       }
     },
-    { ...game, code },
+    { ...game, runtimeVersion: undefined, code },
   );
 }
 test("runs arbitrary mechanics and preserves literal source replacement characters", async ({
@@ -90,4 +90,43 @@ test("runs with the deployed CSP intersection and blocks dynamic evaluation", as
       `let count=0; try { Function('return 1')(); throw Error('dynamic evaluation allowed'); } catch(error) { if(error.message==='dynamic evaluation allowed') throw error; }`,
   );
   expect(await check(page, code)).toBe("passed");
+});
+test("renders reusable 2D sprites and verifies independent controls with prerequisite input", async ({
+  page,
+}) => {
+  const { engineGame } = await import("../engine-fixture");
+  await page.goto("/tests/code-harness.html");
+  await page.waitForFunction(() => !!window.runProbe);
+  const result = await page.evaluate(async (game) => {
+    try {
+      await window.runProbe(game);
+      return "passed";
+    } catch (error) {
+      return String(error);
+    }
+  }, engineGame);
+  expect(result).toBe("passed");
+});
+test("rejects a decorative button that never changes actual game state", async ({
+  page,
+}) => {
+  const { engineGame } = await import("../engine-fixture");
+  const broken = {
+    ...engineGame,
+    code: engineGame.code.replace(
+      "if(input.keys.KeyA&&input.keys.KeyW)lane-=dt*100;",
+      "",
+    ),
+  };
+  await page.goto("/tests/code-harness.html");
+  await page.waitForFunction(() => !!window.runProbe);
+  const result = await page.evaluate(async (game) => {
+    try {
+      await window.runProbe(game);
+      return "passed";
+    } catch (error) {
+      return String(error);
+    }
+  }, broken);
+  expect(result).toContain("KeyA did not change lane");
 });

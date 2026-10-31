@@ -16,7 +16,7 @@ export default defineConfig({
     },
   },
   webServer: {
-    command: "node tests/vercel-server.mjs",
+    command: "npm run build:engine && node tests/vercel-server.mjs",
     url: "http://127.0.0.1:5174",
     reuseExistingServer: false,
   },

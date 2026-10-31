@@ -115,14 +115,14 @@ function App() {
     }
   }
   async function checkAndRepair(game: CodeGame) {
-    setPhase("Checking the generated game…");
+    setPhase("Checking rendering and controls…");
     try {
       await probeGame(game);
       return game;
     } catch (failure) {
       setPhase("Asking AI to repair a startup error…");
       const repaired = await requestGame(
-        "Repair the runtime failure while preserving this game's intended rules and artwork.",
+        "Repair the failed rendering or control check while preserving this game's intended rules and artwork. Every declared action must visibly affect actual gameplay.",
         game,
         failure instanceof Error ? failure.message : "Startup failed",
         setPhase,
@@ -447,7 +447,9 @@ function App() {
                   {spec.title}
                 </h1>
                 <p>
-                  {isCodeGame(spec) ? "AI-written source" : "Legacy saved game"}{" "}
+                  {isCodeGame(spec)
+                    ? "AI-written 2D game"
+                    : "Legacy saved game"}{" "}
                   · v{session.index + 1}
                 </p>
               </div>

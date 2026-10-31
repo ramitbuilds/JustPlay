@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite --host 0.0.0.0",
-    "build": "tsc -b && vite build",
+    "dev": "npm run build:engine && vite --host 0.0.0.0",
+    "build": "npm run build:engine && tsc -b && vite build",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "test": "vitest run",
@@ -15,7 +15,8 @@
     "deploy:check": "npm run build && wrangler deploy --dry-run",
     "format": "prettier --write src functions tests *.ts *.js *.json",
     "test:e2e:vercel": "playwright test --config vercel.playwright.config.ts",
-    "check:vercel": "tsc -p tsconfig.vercel.json && node scripts/check-vercel.mjs"
+    "check:vercel": "tsc -p tsconfig.vercel.json && node scripts/check-vercel.mjs",
+    "build:engine": "vite build --config vite.engine.config.ts"
   },
   "dependencies": {
     "acorn": "^8.19.0",

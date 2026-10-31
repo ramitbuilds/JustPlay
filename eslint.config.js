@@ -9,6 +9,7 @@ export default ts.config(
       ".vercel-check/**",
       ".impeccable/**",
       "dist/**",
+      "public/runtime/**",
       "node_modules/**",
       "test-results/**",
       "playwright-report/**",

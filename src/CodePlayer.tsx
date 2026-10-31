@@ -1,3 +1,4 @@
+import { prepareGame } from "./game-bundle";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   Play,
@@ -53,7 +54,7 @@ export default function CodePlayer({
         );
         setState("error");
       }
-    }, 7000);
+    }, 20000);
     const receive = (event: MessageEvent<SandboxMessage>) => {
       if (
         event.source !== frame.current?.contentWindow ||
@@ -147,7 +148,20 @@ export default function CodePlayer({
           referrerPolicy="no-referrer"
           src="/sandbox.html"
           className="code-frame"
-          onLoad={() => post({ type: "init", code: game.code })}
+          onLoad={async () => {
+            try {
+              const bundle = await prepareGame(game);
+              post({ type: "init", ...bundle });
+            } catch (error) {
+              const message =
+                error instanceof Error
+                  ? error.message
+                  : "Artwork could not load.";
+              setError(message);
+              setState("error");
+              callbacks.current.onRuntimeError?.(message);
+            }
+          }}
         />
         {state !== "playing" && (
           <div className="game-overlay">
@@ -241,11 +255,12 @@ export default function CodePlayer({
           {game.controls.map((c) => (
             <button
               key={c.key}
+              aria-label={c.label}
               disabled={state !== "playing"}
+              title={c.description || `${c.label}: hold ${c.key}`}
               onPointerDown={(e) => {
                 e.preventDefault();
                 e.currentTarget.setPointerCapture(e.pointerId);
-                frame.current?.contentWindow?.focus();
                 post({ type: "key", key: c.key, down: true });
               }}
               onPointerUp={() => post({ type: "key", key: c.key, down: false })}
@@ -261,7 +276,8 @@ export default function CodePlayer({
               onKeyUp={() => post({ type: "key", key: c.key, down: false })}
               onBlur={() => post({ type: "key", key: c.key, down: false })}
             >
-              {c.label}
+              <span>{c.label}</span>
+              <small>{c.key.replace("Arrow", "").replace("Key", "")}</small>
             </button>
           ))}
         </div>

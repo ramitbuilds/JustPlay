@@ -1,3 +1,4 @@
+import { prepareGame } from "./game-bundle";
 import type { CodeGame } from "./code-game";
 export type SandboxMessage = {
   channel: string;
@@ -10,7 +11,8 @@ export type SandboxMessage = {
   frames?: number;
   playing?: boolean;
 };
-export function probeGame(game: CodeGame): Promise<void> {
+export async function probeGame(game: CodeGame): Promise<void> {
+  const bundle = await prepareGame(game);
   return new Promise((resolve, reject) => {
     const frame = document.createElement("iframe"),
       channel = crypto.randomUUID();
@@ -29,7 +31,7 @@ export function probeGame(game: CodeGame): Promise<void> {
             "The generated game did not start within the validation budget.",
           ),
         ),
-      6500,
+      20000,
     );
     function finish(error?: Error) {
       if (done) return;
@@ -53,6 +55,7 @@ export function probeGame(game: CodeGame): Promise<void> {
         finish(
           new Error(data.message || "The generated game failed to start."),
         );
+      if (data.type === "verified") finish();
       if (data.type === "ready") {
         ready = true;
         frame.contentWindow?.postMessage(
@@ -66,7 +69,7 @@ export function probeGame(game: CodeGame): Promise<void> {
     window.addEventListener("message", message);
     frame.onload = () =>
       frame.contentWindow?.postMessage(
-        { channel, type: "init", code: game.code },
+        { channel, type: "init", ...bundle, probe: true },
         "*",
       );
     document.body.append(frame);
