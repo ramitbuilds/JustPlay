@@ -262,8 +262,8 @@ export class SportsController {
       if (this.phase === "waiting" || this.phase === "charging") {
         this.aim = Phaser.Math.Clamp(
           this.aim + (Number(input.left) - Number(input.right)) * 32 * dt,
-          35,
-          78,
+          45,
+          72,
         );
         const angle = Phaser.Math.DegToRad(this.aim),
           distance = this.hoopX - this.ball.x,
@@ -282,7 +282,11 @@ export class SportsController {
           );
         }
         if (!input.action && this.previousAction && this.phase === "charging") {
-          const speed = 320 + this.charge * 360;
+          const inGreenBand =
+            Math.abs(this.charge - this.targetPower) <=
+            0.065 - s.spec.difficulty * 0.006;
+          const speed =
+            320 + (inGreenBand ? this.targetPower : this.charge) * 360;
           this.phase = "flight";
           this.flightTime = 0;
           this.ball
@@ -359,12 +363,12 @@ export class SportsController {
       }
       this.bat.clear();
       this.bat.lineStyle(6, 0xeec98d);
-      const swingAngle = this.swing > 0 ? -1 : 1;
+      const swinging = this.swing > 0;
       this.bat.lineBetween(
         158,
         276,
-        182 + swingAngle * 12,
-        300 - swingAngle * 24,
+        swinging ? 210 : 174,
+        swinging ? 266 : 315,
       );
       this.bat.lineStyle(3, 0x644c35);
       this.bat.lineBetween(153, 270, 158, 276);

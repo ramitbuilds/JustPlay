@@ -146,3 +146,28 @@ test("mobile sports controls charge a shot and fit the viewport", async ({
     390,
   );
 });
+
+test("basketball green-band assistance works at the lowest aim angle", async ({
+  page,
+}) => {
+  await boot(page, "basketball");
+  await page.keyboard.down("ArrowRight");
+  await page.waitForFunction(() => window.runtime.scene.sport!.aim <= 45);
+  await page.keyboard.up("ArrowRight");
+  await page.evaluate(() => {
+    const s = window.runtime.scene;
+    setInterval(() => {
+      const c = s.sport!;
+      if (s.status.score > 0 || s.status.state !== "playing") return;
+      if (c.phase === "waiting") s.controls.jump = true;
+      else if (c.phase === "charging" && c.charge >= c.targetPower + 0.02)
+        s.controls.jump = false;
+    }, 5);
+  });
+  await page.waitForFunction(
+    () => window.runtime.scene.status.score >= 2,
+    {},
+    { timeout: 8000 },
+  );
+  expect(await page.evaluate(() => window.runtime.scene.status.health)).toBe(6);
+});
