@@ -1,4 +1,5 @@
 # JustPlay design system
+
 Creative playroom meets a precise editorial studio. The worlds, not dashboard chrome, carry the color.
 
 - Paper #f4f2e9; ink #202c27; moss #2b5c42; acid #d8ed83; border #d3d7c9; muted ink #586457. Warm and legible in daylight.

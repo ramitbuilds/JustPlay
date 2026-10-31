@@ -1,0 +1,11 @@
+# Asset provenance
+
+| Asset                                              | Origin                                                                                  | License     | Metadata                                                                                                    |
+| -------------------------------------------------- | --------------------------------------------------------------------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------- |
+| fox, robot, knight, slime, bat, crystal PNG sheets | Original JustPlay artwork, `scripts/make_assets.py`                                     | Project MIT | Each 64×16 RGBA sheet has 4 frames at 16×16. Scale 2; nearest-neighbor. Hero/slime/crystal 7fps; bat 10fps. |
+| forest, neon, dungeon SVG scenery                  | Original deterministic composition, same script                                         | Project MIT | 640×360; integer coordinates; local background/parallax.                                                    |
+| All game sound                                     | Web Audio triangle oscillators in runtime                                               | Project MIT | Synthesized on interaction; no downloaded audio.                                                            |
+| Space Grotesk variable font                        | [Google Fonts distribution](https://github.com/google/fonts/tree/main/ofl/spacegrotesk) | SIL OFL 1.1 | Self-hosted `space-grotesk.ttf`; full OFL in `public/assets/FONT_LICENSE.txt`.                              |
+| UI icons                                           | [Lucide](https://lucide.dev/license) / lucide-react                                     | ISC         | Installed dependency; consistent SVG icons.                                                                 |
+
+Kenney Tiny Dungeon was considered (its page lists CC0), but download-link access returned 403. No Kenney or competitor artwork is included. Assets are generated locally without image APIs, stock purchases or protected franchise sprites. Rebuild original pixels with `python scripts/make_assets.py` (Python standard library only). The existing repository MIT license remains unchanged.

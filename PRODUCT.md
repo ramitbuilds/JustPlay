@@ -1,4 +1,5 @@
 # JustPlay
+
 Describe your game. Play it immediately.
 
 For curious players and hackathon visitors who want to create and iterate on small 2D games without coding. Success is a validated AI design, a playable level, an edit that changes mechanics and a saved version that reopens. Three supported families: platformer, runner, survival. No arbitrary code generation or AAA claims.
