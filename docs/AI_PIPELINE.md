@@ -26,7 +26,7 @@ Groq GPT OSS requests use `response_format.type=json_schema`, `strict=true`, low
 
 ## Prompt fidelity and supported decisions
 
-The provider now returns a strict flat object containing GameSpec fields plus `supported` and `reason`. On an unsupported decision the schema-required placeholder fields are discarded and only the reason is shown; no game is loaded. The provider-compatible flat form avoids nullable nested response issues, and redundant `minItems:0` is omitted from the wire schema. Older wrapped/unwrapped responses remain parse-compatible but pass the same semantic checks. Runtime family enums now include basketball and cricket, with court/stadium themes and an athlete asset.
+The provider now returns a strict flat object containing GameSpec fields plus `supported` and `reason`. On an unsupported decision the schema-required placeholder fields are discarded and only the reason is shown; no game is loaded. The flat form reduces nested nullable cases, and redundant `minItems:0` is omitted from the wire schema. Older wrapped/unwrapped responses remain parse-compatible but pass the same semantic checks. Runtime family enums now include basketball and cricket, with court/stadium themes and an athlete asset.
 
 A separate intent guard passes the requested family to the provider and rejects mismatched family, explicit forest/neon/dungeon theme and double-jump/nighttime mismatches. Wrong designs receive one bounded repair with the actual validation feedback. Known unsupported categories are rejected before inference; the model can decline other unsupported ideas. No fallback fixture replaces a failed generation. Editing inherits the current family unless a different supported family is explicitly requested.
 

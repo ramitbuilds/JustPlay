@@ -38,3 +38,7 @@ The automatic Vercel deployment now serves the native Node API. Live Groq creati
 ## Prompt fidelity follow-up
 
 User reported every prompt becoming a neon runner. Live reproduction confirmed basketball/cricket were forced into the old three-family schema, with misleading sport descriptions. Added two actual sports runtimes, structured support/decline decisions, explicit family hints and semantic prompt checks. Local verification: 60 unit/integration tests, 15 gameplay/UI browser tests, 3 native HTTP browser tests, NodeNext smoke/typecheck/lint/build. No new dependencies, paid assets or credentials. Deploy on main and verify both real sports prompts next.
+
+## Prompt fidelity completed
+
+Live cricket and basketball requests now produce matching validated sports games through Groq. Their actual browser scenes/controls were exercised with no page errors; cricket scored a run, and basketball shot/miss behavior worked. Unsupported chess is declined. Provider protocol was flattened for compatibility and JSON-decoding failures receive bounded repair. Sports instructions derive from real goals/wickets/misses. Physics QA corrected the shot guide’s fixed-step bias. Final checks: 65 unit/integration and 19 browser tests, typecheck/lint/build/NodeNext HTTP smoke. Existing keys and environment settings were reused.

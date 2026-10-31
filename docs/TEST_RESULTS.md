@@ -4,13 +4,21 @@
 
 - Reproduced live: cricket returned a renamed neon platformer; basketball returned a renamed neon runner. The previous schema could not express sports mechanics.
 - Added real basketball and cricket runtimes and a supported/unsupported AI decision. Family/theme/mechanic checks reject unrelated designs and feed bounded repair.
-- **60 unit/integration tests passed**, including rejection of a canned Neon Dash response for cricket/basketball, valid sports designs, mismatch repair, unsupported requests and edit-family preservation.
-- **15 browser gameplay/UI tests passed**, including basketball scoring/win/loss/restart, cricket boundaries/wickets/win/loss/restart and mobile shot charging.
+- **65 unit/integration tests passed**, including rejection of a canned Neon Dash response for cricket/basketball, valid sports designs, mismatch repair, unsupported requests and edit-family preservation.
+- **16 browser gameplay/UI tests passed**, including basketball scoring/win/loss/restart, cricket boundaries/wickets/win/loss/restart and mobile shot charging.
 - **3 native Vercel HTTP browser tests passed**, including both sport creation requests and edits. Upstream responses are mocked only in these local tests.
 - NodeNext emitted-server HTTP smoke, typecheck, lint and production build passed.
 - Inspected basketball/cricket canvas and mobile studio screenshots. Sports-specific instructions, score units, action buttons and edit suggestions replace irrelevant platformer controls.
 
-Production checks will follow the main deployment; these local results do not establish live model prompt fidelity by themselves.
+Live production verification at https://justplay-olive-eta.vercel.app/ now passes:
+
+- `Create a cricket game.` returned HTTP **200**, genre **cricket**, stadium/athlete, wickets, a 20-run goal and no enemies. A fresh browser creation loaded the cricket pitch; a timed swing scored **1 run**, with no page errors.
+- `Create a basketball game.` returned HTTP **200**, genre **basketball**, court/athlete, a 15-point target and no enemies. A fresh browser creation loaded the hoop/court and charged shot controls; a shot/miss deducted a try, with no page errors. Local physical-input tests separately scored baskets through victory and exercised the green-band guide at its lowest supported angle.
+- The returned sport designs had different titles, seeds, rules and controls; neither was a renamed runner. These live requests used the actual Vercel proxy and Groq, with no API mocking or fixture fallback.
+- A live chess request returned a clear unsupported-mechanics error; no unrelated game was loaded.
+- [Live basketball](screenshots/live-basketball.png) · [Live cricket](screenshots/live-cricket.png). Both captures show AI-designed sessions, separate from the explicitly labeled local demos.
+
+Provider QA found HTTP 400 JSON-decoding failures. A simpler flat supported/decline decision and one bounded repair now produce valid data; this does not establish that every nested schema is unsupported by Groq. Shot-guide QA also corrected Arcade’s fixed-step gravity bias so green-band assistance matches actual physics. Final checks: 65 unit/integration tests; 19 browser tests (10 original + 6 sports + 3 native HTTP); typecheck/lint/build and emitted NodeNext HTTP smoke passed.
 
 ## Vercel API compatibility result
 

@@ -1,6 +1,6 @@
 # Known limits
 
-- Workspace keys remain unavailable, but Vercel’s existing server-side Groq key was used successfully for live generation, gameplay and an edit. Gemma remains mocked-adapter tested only. Account quotas and billing settings were not inspected; use only an eligible free account.
+- Workspace keys remain unavailable, but Vercel’s existing server-side Groq key was used successfully for live generation, gameplay and an edit, including separate cricket and basketball designs in the fidelity follow-up. Gemma remains mocked-adapter tested only. Account quotas and billing settings were not inspected; use only an eligible free account.
 - The user’s Vercel deployment is live and verified at https://justplay-olive-eta.vercel.app/. Cloudflare remains dry-run verified only; its authentication is unavailable.
 - REA MCP unavailable; Instaplay research used public HTML/bootstrap evidence. Its private backend and game quality are not established by this research. Groq documentation and Kenney download access returned 403.
 - Five constrained game families, five visual themes, four heroes, slime/bat enemies. Survival is top-down and has no jump mechanic. Runner uses endless-runner controls and increasing speed with a finite finish target. No arbitrary genres, multiplayer, user scripting or uploaded artwork.
