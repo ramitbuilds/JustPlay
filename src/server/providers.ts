@@ -263,6 +263,11 @@ export function createProvider(
           }
         } else design = parseModelSpec(text); // Accept older unwrapped provider responses, still strictly validated.
         assertPromptMatch(design, prompt, current);
+        // UI instructions come from implemented rules, not imagined timers/team play.
+        if (design.genre === "basketball")
+          design.description = `Aim at the hoop, hold to charge and release to shoot. Score ${design.goal} points before ${design.health} missed shots.`;
+        if (design.genre === "cricket")
+          design.description = `Time your bat swing against each delivery. Reach ${design.goal} runs before losing ${design.health} wickets; good timing earns fours and sixes.`;
         return design;
       } catch (error) {
         if (error instanceof ProviderError) throw error;

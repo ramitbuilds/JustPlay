@@ -172,3 +172,18 @@ it("bounds Groq JSON-decoding failure retries", async () => {
   ).rejects.toThrow("invalid design twice");
   expect(fetcher).toHaveBeenCalledTimes(2);
 });
+
+it("grounds sports instructions in actual goals and misses instead of invented rules", async () => {
+  const fetcher = vi
+    .fn()
+    .mockResolvedValue(
+      response({
+        ...sportsExamples[0].spec,
+        description: "Dunk with a full team before the timer runs out.",
+      }),
+    );
+  const design = await createProvider(env, fetcher).generateGame("basketball");
+  expect(design.description).toContain("10 points");
+  expect(design.description).toContain("6 missed shots");
+  expect(design.description).not.toMatch(/timer|team|dunk/i);
+});
