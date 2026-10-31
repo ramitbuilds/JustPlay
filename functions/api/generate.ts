@@ -122,6 +122,8 @@ export async function onRequest({
                     ? error.message
                     : "The game request could not be processed. Please retry.",
                 status: error instanceof ProviderError ? error.status : 500,
+                diagnostic:
+                  error instanceof ProviderError ? error.validation : undefined,
               }),
             )
             .finally(() => {
@@ -153,7 +155,10 @@ export async function onRequest({
     return json({ game, trace: provider.trace });
   } catch (error) {
     if (error instanceof ProviderError)
-      return json({ error: error.message }, error.status);
+      return json(
+        { error: error.message, diagnostic: error.validation },
+        error.status,
+      );
     if (error instanceof z.ZodError || error instanceof SyntaxError)
       return json(
         {

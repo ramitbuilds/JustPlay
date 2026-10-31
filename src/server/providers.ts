@@ -22,6 +22,7 @@ export class ProviderError extends Error {
   constructor(
     message: string,
     public status = 502,
+    public validation?: string,
   ) {
     super(message);
   }
@@ -357,6 +358,8 @@ export function createProvider(
     }
     throw new ProviderError(
       "The AI returned incomplete or invalid source twice. Try a smaller idea; no template or substitute game was loaded.",
+      502,
+      feedback,
     );
   }
   return {

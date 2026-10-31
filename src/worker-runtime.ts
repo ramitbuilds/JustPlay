@@ -217,6 +217,20 @@ scope.justplayBoot = (factory) => {
     baseline: boolean,
   ) {
     initialize();
+    const history: {
+      state: Snapshot;
+      visual: ReturnType<typeof fingerprint>;
+      hud: string;
+    }[] = [];
+    const capture = () => {
+      game!.render();
+      history.push({
+        state: snapshot(),
+        visual: fingerprint(),
+        hud: JSON.stringify(hud),
+      });
+    };
+    capture();
     for (const action of check.steps) {
       const keys = action.keys.filter(
         (key) => !baseline || key !== check.control,
@@ -237,15 +251,14 @@ scope.justplayBoot = (factory) => {
           down,
         });
       }
-      for (let n = 0; n < action.frames && !ended; n++) step(1 / 60);
+      for (let n = 0; n < action.frames && !ended; n++) {
+        step(1 / 60);
+        if (n % 10 === 0 || n === action.frames - 1 || ended) capture();
+      }
     }
-    game!.render();
-    return {
-      state: snapshot(),
-      visual: fingerprint(),
-      hud: JSON.stringify(hud),
-    };
+    return history;
   }
+
   async function verify() {
     testing = true;
     const originalRandom = Math.random;
@@ -270,21 +283,29 @@ scope.justplayBoot = (factory) => {
       for (const check of checks) {
         post({ type: "beat", frames });
         const baseline = runScenario(check, true),
-          active = runScenario(check, false),
-          a = baseline.state.metrics[check.metric],
-          b = active.state.metrics[check.metric];
-        if (!Number.isFinite(a) || !Number.isFinite(b))
-          throw Error(
-            `Input check ${check.name}: inspect().metrics.${check.metric} is missing.`,
-          );
-        if (Math.abs(a - b) < 0.0001)
+          active = runScenario(check, false);
+        let stateChanged = false,
+          feedbackChanged = false;
+        for (let i = 0; i < Math.max(baseline.length, active.length); i++) {
+          const a = baseline[Math.min(i, baseline.length - 1)],
+            b = active[Math.min(i, active.length - 1)],
+            x = a.state.metrics[check.metric],
+            y = b.state.metrics[check.metric];
+          if (!Number.isFinite(x) || !Number.isFinite(y))
+            throw Error(
+              `Input check ${check.name}: inspect().metrics.${check.metric} is missing.`,
+            );
+          if (Math.abs(x - y) >= 0.0001) {
+            stateChanged = true;
+            if (a.visual.hash !== b.visual.hash || a.hud !== b.hud)
+              feedbackChanged = true;
+          }
+        }
+        if (!stateChanged)
           throw Error(
             `Input check ${check.name} failed: ${check.control} did not change ${check.metric} compared with the same simulation without that input.`,
           );
-        if (
-          active.visual.hash === baseline.visual.hash &&
-          active.hud === baseline.hud
-        )
+        if (!feedbackChanged)
           throw Error(
             `Input check ${check.name}: state changed but there is no visible or HUD feedback.`,
           );

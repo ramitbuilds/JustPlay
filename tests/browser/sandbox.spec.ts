@@ -130,3 +130,31 @@ test("rejects a decorative button that never changes actual game state", async (
   }, broken);
   expect(result).toContain("KeyA did not change lane");
 });
+test("accepts a real one-shot action even when it returns to its original state", async ({
+  page,
+}) => {
+  const transient = {
+    ...game,
+    verification: [
+      {
+        name: "Circle jumps",
+        control: "Space",
+        metric: "height",
+        steps: [{ frames: 120, keys: ["Space"] }],
+      },
+    ],
+    code: `function createGame({ctx,input,api}) {let time=0,height=0;return {update(dt){if(input.pressed.Space)time=.01;if(time>0){time+=dt*5;height=Math.max(0,Math.sin(time))*80;if(time>Math.PI){time=0;height=0;}}api.setHud({status:'Jump the circle',stats:[{label:'Height',value:height}]});},render(){ctx.fillStyle='#202c27';ctx.fillRect(0,0,800,450);ctx.fillStyle='#d8ed83';ctx.beginPath();ctx.arc(400,300-height,50,0,Math.PI*2);ctx.fill();ctx.fillStyle='#ffffff';ctx.font='24px sans-serif';ctx.fillText('Jump',350,80);},inspect(){return {phase:'playing',metrics:{height}};}};}`,
+  };
+  await page.goto("/tests/code-harness.html");
+  await page.waitForFunction(() => !!window.runProbe);
+  expect(
+    await page.evaluate(async (game) => {
+      try {
+        await window.runProbe(game);
+        return "passed";
+      } catch (error) {
+        return String(error);
+      }
+    }, transient),
+  ).toBe("passed");
+});
