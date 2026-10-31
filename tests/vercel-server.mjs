@@ -10,7 +10,8 @@ const vite = await createViteServer({
   server: { middlewareMode: true },
   appType: "spa",
 });
-const { examples } = await vite.ssrLoadModule("/src/fixtures.ts");
+const { examples, sportsExamples } =
+  await vite.ssrLoadModule("/src/fixtures.ts");
 const handler = (await vite.ssrLoadModule("/api/generate.ts")).default;
 globalThis.fetch = async (url, options) => {
   if (url !== "https://api.groq.com/openai/v1/chat/completions")
@@ -22,11 +23,22 @@ globalThis.fetch = async (url, options) => {
     : /dungeon|survival/i.test(request)
       ? 2
       : 0;
+  const sport = /basketball/i.test(request)
+    ? sportsExamples[0].spec
+    : /cricket/i.test(request)
+      ? sportsExamples[1].spec
+      : null;
   const spec = current
     ? { ...current, difficulty: Math.min(5, current.difficulty + 1) }
-    : examples[index].spec;
+    : (sport ?? examples[index].spec);
   return Response.json({
-    choices: [{ message: { content: JSON.stringify(spec) } }],
+    choices: [
+      {
+        message: {
+          content: JSON.stringify({ supported: true, reason: "", spec }),
+        },
+      },
+    ],
   });
 };
 const server = createServer(async (incoming, outgoing) => {
