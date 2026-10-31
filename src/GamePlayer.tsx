@@ -12,8 +12,9 @@ import {
   ArrowDown,
   Heart,
   Gem,
+  Trophy,
 } from "lucide-react";
-import type { GameSpec } from "./spec";
+import { isSport, type GameSpec } from "./spec";
 import type {
   GameStatus,
   RuntimeControls,
@@ -105,7 +106,13 @@ export default function GamePlayer({ spec }: { spec: GameSpec }) {
   const press = (key: keyof RuntimeControls) => (
     <button
       className="touch-button"
-      aria-label={key}
+      aria-label={
+        key === "jump" && isSport(spec)
+          ? spec.genre === "basketball"
+            ? "charge shot"
+            : "swing bat"
+          : key
+      }
       onPointerDown={(e) => {
         e.preventDefault();
         e.currentTarget.setPointerCapture(e.pointerId);
@@ -128,7 +135,13 @@ export default function GamePlayer({ spec }: { spec: GameSpec }) {
       ) : key === "down" ? (
         <ArrowDown />
       ) : key === "jump" ? (
-        "Jump"
+        spec.genre === "basketball" ? (
+          "Hold to shoot"
+        ) : spec.genre === "cricket" ? (
+          "Swing bat"
+        ) : (
+          "Jump"
+        )
       ) : key === "shoot" ? (
         "Fire"
       ) : (
@@ -142,20 +155,31 @@ export default function GamePlayer({ spec }: { spec: GameSpec }) {
         <span>
           <Heart size={15} /> <b data-testid="health">{status.health}</b> /{" "}
           {spec.health}
+          {isSport(spec)
+            ? spec.genre === "cricket"
+              ? " wickets"
+              : " tries"
+            : ""}
         </span>
         <span>
-          <Gem size={15} />
+          {isSport(spec) ? <Trophy size={15} /> : <Gem size={15} />}
           <b data-testid="score">{status.score}</b>
-          {spec.genre === "survival" || spec.genre === "platformer"
-            ? ` / ${spec.goal}`
+          {isSport(spec) ||
+          spec.genre === "survival" ||
+          spec.genre === "platformer"
+            ? ` / ${spec.goal}${spec.genre === "basketball" ? " points" : spec.genre === "cricket" ? " runs" : ""}`
             : " crystals"}
         </span>
         <span className="hud-goal">
-          {spec.genre === "survival"
-            ? "Defeat the creatures"
-            : spec.genre === "runner"
-              ? "Reach the end of the rooftops"
-              : "Collect crystals & reach the gate"}
+          {spec.genre === "basketball"
+            ? "Score baskets · 2 points each"
+            : spec.genre === "cricket"
+              ? "Time swings · score runs"
+              : spec.genre === "survival"
+                ? "Defeat the creatures"
+                : spec.genre === "runner"
+                  ? "Reach the end of the rooftops"
+                  : "Collect crystals & reach the gate"}
         </span>
       </div>
       <div className="game-stage">
@@ -259,6 +283,26 @@ export default function GamePlayer({ spec }: { spec: GameSpec }) {
           </div>
         )}
       </div>
+      {isSport(spec) && (
+        <div className="sports-feedback">
+          <span role="status" data-testid="game-detail">
+            {status.detail}
+          </span>
+          {spec.genre === "basketball" && (
+            <label>
+              Shot power{" "}
+              <meter
+                min={0}
+                max={1}
+                value={status.charge ?? 0}
+                optimum={status.targetPower ?? 0.5}
+                aria-label="Shot power"
+                aria-valuetext={`${Math.round((status.charge ?? 0) * 100)} percent; aim for ${Math.round((status.targetPower ?? 0.5) * 100)} percent`}
+              />
+            </label>
+          )}
+        </div>
+      )}
       <div className="player-toolbar">
         <div className="toolbar-actions">
           <button
@@ -289,9 +333,13 @@ export default function GamePlayer({ spec }: { spec: GameSpec }) {
           </button>
         </div>
         <span className="control-hint">
-          {spec.genre === "survival"
-            ? "WASD / arrows to move · auto-fire"
-            : "Arrows to move · Space to jump"}
+          {spec.genre === "basketball"
+            ? "Arrows aim · Hold/release Space to shoot"
+            : spec.genre === "cricket"
+              ? "Space to swing · Time the delivery"
+              : spec.genre === "survival"
+                ? "WASD / arrows to move · auto-fire"
+                : "Arrows to move · Space to jump"}
           {spec.mechanics.dash ? " · Shift to dash" : ""}
         </span>
         <button
@@ -322,21 +370,28 @@ export default function GamePlayer({ spec }: { spec: GameSpec }) {
       )}
       <div className="touch-controls">
         <div>
-          {press("left")}
+          {spec.genre !== "cricket" && press("left")}
           {spec.genre === "survival" && press("up")}
           {spec.genre === "survival" && press("down")}
-          {press("right")}
+          {spec.genre !== "cricket" && press("right")}
         </div>
         <div>
           {spec.mechanics.dash && press("dash")}
           {spec.mechanics.shooting &&
+            !isSport(spec) &&
             spec.genre !== "survival" &&
             press("shoot")}
           {spec.genre !== "survival" && press("jump")}
         </div>
       </div>
       <p className="sr-only" aria-live="polite">
-        Game {status.state}. {status.health} health. {status.score} collected.
+        Game {status.state}. {status.health} health. {status.score}{" "}
+        {spec.genre === "basketball"
+          ? "points"
+          : spec.genre === "cricket"
+            ? "runs"
+            : "collected"}
+        .
       </p>
     </div>
   );

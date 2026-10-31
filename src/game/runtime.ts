@@ -1,11 +1,15 @@
 import Phaser from "phaser";
-import type { GameSpec } from "../spec";
+import { isSport, type GameSpec } from "../spec";
+import { SportsController } from "./sports";
 import { compose, random } from "./level";
 export type GameStatus = {
   health: number;
   score: number;
   state: "ready" | "playing" | "paused" | "won" | "lost";
   progress: number;
+  detail?: string;
+  charge?: number;
+  targetPower?: number;
 };
 export type RuntimeControls = {
   left: boolean;
@@ -27,6 +31,7 @@ export const makeControls = (): RuntimeControls => ({
 });
 type Enemy = Phaser.Physics.Arcade.Sprite & { kind?: string; home?: number };
 export class PlayScene extends Phaser.Scene {
+  sport?: SportsController;
   spec: GameSpec;
   onStatus: (s: GameStatus) => void;
   controls: RuntimeControls;
@@ -68,7 +73,15 @@ export class PlayScene extends Phaser.Scene {
   }
   preload() {
     this.load.on("loaderror", this.onLoadError);
-    for (const id of ["fox", "robot", "knight", "slime", "bat", "crystal"])
+    for (const id of [
+      "fox",
+      "robot",
+      "knight",
+      "athlete",
+      "slime",
+      "bat",
+      "crystal",
+    ])
       this.load.spritesheet(id, `/assets/${id}.png`, {
         frameWidth: 16,
         frameHeight: 16,
@@ -76,6 +89,12 @@ export class PlayScene extends Phaser.Scene {
     this.load.image("background", `/assets/${this.spec.theme}.svg`);
   }
   create() {
+    this.sport = undefined;
+    if (isSport(this.spec)) {
+      this.sport = new SportsController(this);
+      this.sport.create();
+      return;
+    }
     const s = this.spec,
       level = compose(s);
     this.worldWidth = level.width;
@@ -394,6 +413,14 @@ export class PlayScene extends Phaser.Scene {
       bottom = c.down || down("down") || down("s");
     const jump = c.jump || down("jump") || (s.genre !== "survival" && up),
       dash = c.dash || down("dash");
+    if (this.sport) {
+      this.sport.update(dt, {
+        left: !!left,
+        right: !!right,
+        action: !!(jump || c.shoot || down("shoot")),
+      });
+      return;
+    }
     const body = this.player.body as Phaser.Physics.Arcade.Body;
     if (s.genre === "survival") {
       const vec = new Phaser.Math.Vector2(
@@ -524,7 +551,7 @@ export function createRuntime(
   game.canvas.tabIndex = 0;
   game.canvas.setAttribute(
     "aria-label",
-    `${spec.title} game. Arrow keys or WASD to move, space to jump, shift to dash. Survival fires automatically. Tab leaves the canvas.`,
+    `${spec.title} game. ${spec.genre === "basketball" ? "Arrows adjust aim. Hold space to charge, release to shoot." : spec.genre === "cricket" ? "Press space to swing the bat when the ball reaches the batter." : "Arrow keys or WASD to move, space to jump, shift to dash. Survival fires automatically."} Tab leaves the canvas.`,
   );
   return { game, scene };
 }

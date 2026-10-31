@@ -4,13 +4,21 @@
     <div id="game" style="width: 960px; height: 540px"></div>
     <script type="module">
       import { createRuntime, makeControls } from "/src/game/runtime.ts";
-      import { examples } from "/src/fixtures.ts";
+      import { examples, sportsExamples } from "/src/fixtures.ts";
+      const params = new URLSearchParams(location.search);
       const index = Number(
         new URLSearchParams(location.search).get("game") || 0,
       );
+      const spec = structuredClone(
+        params.get("sport")
+          ? sportsExamples.find((e) => e.spec.genre === params.get("sport"))
+              .spec
+          : examples[index].spec,
+      );
+      if (params.get("health")) spec.health = Number(params.get("health"));
       window.runtime = createRuntime(
         document.querySelector("#game"),
-        structuredClone(examples[index].spec),
+        spec,
         makeControls(),
         (s) => (window.status = s),
       );

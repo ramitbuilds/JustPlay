@@ -17,7 +17,7 @@ import {
   X,
   WandSparkles,
 } from "lucide-react";
-import { examples, editFixture } from "./fixtures";
+import { examples, sportsExamples, editFixture } from "./fixtures";
 import { type GameSpec } from "./spec";
 import { requestGame } from "./api";
 import {
@@ -32,7 +32,10 @@ const genreLabel = {
   platformer: "Platformer",
   runner: "Endless runner",
   survival: "Survival",
+  basketball: "Basketball shootout",
+  cricket: "Cricket batting",
 };
+const showcasedGames = [...examples, ...sportsExamples];
 type Session = {
   id: string;
   versions: GameSpec[];
@@ -43,7 +46,7 @@ type Session = {
 function World({ spec, large = false }: { spec: GameSpec; large?: boolean }) {
   return (
     <div
-      className={`world-art ${spec.theme} ${spec.genre === "survival" ? "arena" : ""} ${large ? "large" : ""}`}
+      className={`world-art ${spec.theme} ${spec.genre === "basketball" || spec.genre === "cricket" ? "sports" : ""} ${spec.genre === "survival" ? "arena" : ""} ${large ? "large" : ""}`}
       style={{ backgroundImage: `url(/assets/${spec.theme}.svg)` }}
       aria-hidden="true"
     >
@@ -54,6 +57,12 @@ function World({ spec, large = false }: { spec: GameSpec; large?: boolean }) {
       <span className="crystal c3" />
       <span className="world-platform" />
       <span className="world-portal" />
+      {(spec.genre === "basketball" || spec.genre === "cricket") && (
+        <>
+          <span className={`sport-prop ${spec.genre}`} />
+          <span className="sport-ball" />
+        </>
+      )}
       {spec.genre === "survival" && (
         <>
           <span className="sprite slime enemy-preview" />
@@ -135,7 +144,7 @@ function App() {
     }
   }
   function openExample(i: number) {
-    const e = examples[i];
+    const e = showcasedGames[i];
     setSession({
       id: crypto.randomUUID(),
       versions: [structuredClone(e.spec)],
@@ -383,8 +392,10 @@ function App() {
                 )}
                 <div className="composer-bottom">
                   <span>
-                    One idea. Three ways to play.
-                    <small>Platformer · Runner · Survival</small>
+                    Five real ways to play.
+                    <small>
+                      Platformer · Runner · Survival · Basketball · Cricket
+                    </small>
                   </span>
                   <button className="primary" disabled={pending} type="submit">
                     {pending ? (
@@ -398,8 +409,9 @@ function App() {
                 </div>
               </form>
               <p className="honesty" id="create-help">
-                AI creation needs a configured free provider. No key? Play and
-                remix the local examples below.
+                Supports arcade platformers, runners, survival adventures,
+                basketball shooting and cricket batting. Other mechanics are not
+                supported yet. Local examples work without an AI key.
               </p>
             </section>
             <section className="examples-section">
@@ -411,7 +423,7 @@ function App() {
                 <span className="section-note">HANDCRAFTED LOCAL EXAMPLES</span>
               </div>
               <div className="examples-grid">
-                {examples.map((e, i) => (
+                {showcasedGames.map((e, i) => (
                   <article className="example" key={e.label}>
                     <button
                       className="preview-button"
@@ -441,7 +453,11 @@ function App() {
                         ? "A curious little adventure"
                         : e.spec.theme === "neon"
                           ? "Chase the city lights"
-                          : "Keep the darkness at bay"}
+                          : e.spec.genre === "basketball"
+                            ? "Find your perfect shot"
+                            : e.spec.genre === "cricket"
+                              ? "Time it. Send it for six."
+                              : "Keep the darkness at bay"}
                     </p>
                     <button
                       className="use-idea"
@@ -514,11 +530,15 @@ function App() {
                 <div className="game-notes">
                   <h2>Your mission</h2>
                   <p>
-                    {spec.genre === "survival"
-                      ? `Defeat ${spec.goal} creatures. Your lantern fires automatically; keep moving to stay alive.`
-                      : spec.genre === "runner"
-                        ? "Jump the rooftop barriers and reach the end. The city gets faster as you run."
-                        : `Gather ${spec.goal} crystals and reach the glowing forest gate. Jump on slimes to defeat them.`}
+                    {spec.genre === "basketball"
+                      ? `Score ${spec.goal} points. Arrows adjust aim. Hold Space to charge, then release in the green power band. You have ${spec.health} missed shots.`
+                      : spec.genre === "cricket"
+                        ? `Score ${spec.goal} runs. Press Space when the delivery reaches the green batting zone. Good timing earns fours and sixes; misses cost a wicket.`
+                        : spec.genre === "survival"
+                          ? `Defeat ${spec.goal} creatures. Your lantern fires automatically; keep moving to stay alive.`
+                          : spec.genre === "runner"
+                            ? "Jump the rooftop barriers and reach the end. The city gets faster as you run."
+                            : `Gather ${spec.goal} crystals and reach the glowing forest gate. Jump on slimes to defeat them.`}
                   </p>
                   <div className="mechanic-tags">
                     {spec.mechanics.doubleJump && <span>Double jump</span>}
@@ -554,7 +574,13 @@ function App() {
                     value={edit}
                     onChange={(e) => setEdit(e.target.value)}
                     maxLength={2000}
-                    placeholder="Give me a double jump…"
+                    placeholder={
+                      spec.genre === "basketball"
+                        ? "Give me more tries…"
+                        : spec.genre === "cricket"
+                          ? "Give me more wickets…"
+                          : "Give me a double jump…"
+                    }
                     rows={4}
                     disabled={pending}
                   />
@@ -574,12 +600,22 @@ function App() {
                   </button>
                 </form>
                 <div className="edit-suggestions">
-                  {[
-                    "Make it harder",
-                    "Add flying enemies",
-                    "Change to nighttime",
-                    "Give me a double jump",
-                  ].map((s) => (
+                  {(spec.genre === "basketball" || spec.genre === "cricket"
+                    ? [
+                        "Make it harder",
+                        spec.genre === "cricket"
+                          ? "Give me more wickets"
+                          : "Give me more tries",
+                        "Raise the target score",
+                        "Change to nighttime",
+                      ]
+                    : [
+                        "Make it harder",
+                        "Add flying enemies",
+                        "Change to nighttime",
+                        "Give me a double jump",
+                      ]
+                  ).map((s) => (
                     <button
                       key={s}
                       disabled={pending}
