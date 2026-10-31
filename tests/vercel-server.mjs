@@ -35,7 +35,7 @@ globalThis.fetch = async (url, options) => {
     choices: [
       {
         message: {
-          content: JSON.stringify({ supported: true, reason: "", spec }),
+          content: JSON.stringify({ ...spec, supported: true, reason: "" }),
         },
       },
     ],

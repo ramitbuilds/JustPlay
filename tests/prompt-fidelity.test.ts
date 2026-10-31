@@ -8,7 +8,11 @@ const response = (spec: unknown) =>
     choices: [
       {
         message: {
-          content: JSON.stringify({ supported: true, reason: "", spec }),
+          content: JSON.stringify({
+            ...(spec as object),
+            supported: true,
+            reason: "",
+          }),
         },
       },
     ],
@@ -67,44 +71,40 @@ describe("prompt fidelity", () => {
     expect(fetcher).not.toHaveBeenCalled();
   });
   it("allows the AI to report unsupported ideas honestly", async () => {
-    const fetcher = vi
-      .fn()
-      .mockResolvedValue(
-        Response.json({
-          choices: [
-            {
-              message: {
-                content: JSON.stringify({
-                  supported: false,
-                  reason: "This engine cannot build a turn-based card game.",
-                  spec: null,
-                }),
-              },
+    const fetcher = vi.fn().mockResolvedValue(
+      Response.json({
+        choices: [
+          {
+            message: {
+              content: JSON.stringify({
+                supported: false,
+                reason: "This engine cannot build a turn-based card game.",
+                spec: null,
+              }),
             },
-          ],
-        }),
-      );
+          },
+        ],
+      }),
+    );
     await expect(
       createProvider(env, fetcher).generateGame("A turn-based card game"),
     ).rejects.toMatchObject({ status: 422 });
     expect(fetcher).toHaveBeenCalledTimes(1);
   });
   it("requires supported responses to include a valid complete design", async () => {
-    const fetcher = vi
-      .fn()
-      .mockImplementation(() =>
-        Promise.resolve(
-          Response.json({
-            choices: [
-              {
-                message: {
-                  content: '{"supported":true,"reason":"","spec":null}',
-                },
+    const fetcher = vi.fn().mockImplementation(() =>
+      Promise.resolve(
+        Response.json({
+          choices: [
+            {
+              message: {
+                content: '{"supported":true,"reason":"","spec":null}',
               },
-            ],
-          }),
-        ),
-      );
+            },
+          ],
+        }),
+      ),
+    );
     await expect(
       createProvider(env, fetcher).generateGame("a forest game"),
     ).rejects.toThrow("invalid design twice");

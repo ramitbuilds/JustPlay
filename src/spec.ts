@@ -73,6 +73,8 @@ export const DesignResponseSchema = z
     spec: GameSpecSchema.nullable(),
   })
   .strict();
-export const designContract = JSON.stringify(
-  z.toJSONSchema(DesignResponseSchema),
-);
+export const DesignWireSchema = GameSpecSchema.extend({
+  supported: z.boolean(),
+  reason: z.string().max(240),
+}).strict();
+export const designContract = JSON.stringify(z.toJSONSchema(DesignWireSchema));
