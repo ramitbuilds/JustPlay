@@ -1,3 +1,5 @@
+import GenerationProgress, { type GenerationStage } from "./GenerationProgress";
+import LoadingSkeleton from "./LoadingSkeleton";
 import { useEffect, useRef, useState } from "react";
 import {
   ArrowUpRight,
@@ -50,6 +52,9 @@ function App() {
     [session, setSession] = useState<Session | null>(null),
     [pending, setPending] = useState(false),
     [phase, setPhase] = useState(""),
+    [generationStage, setGenerationStage] =
+      useState<GenerationStage>("writing"),
+    [libraryLoading, setLibraryLoading] = useState(true),
     [error, setError] = useState(""),
     [formError, setFormError] = useState<{
       target: "create" | "edit";
@@ -104,6 +109,7 @@ function App() {
       (formError.target === "create" ? composer : editInput).current?.focus();
   }, [pending, formError]);
   async function refresh() {
+    setLibraryLoading(true);
     try {
       const result = await listGames();
       setGames(result.games);
@@ -112,14 +118,18 @@ function App() {
       setError(
         "Your browser could not open local storage. Allow site storage, or export your game instead.",
       );
+    } finally {
+      setLibraryLoading(false);
     }
   }
   async function checkAndRepair(game: CodeGame) {
+    setGenerationStage("checking");
     setPhase("Checking rendering and controls…");
     try {
       await probeGame(game);
       return game;
     } catch (failure) {
+      setGenerationStage("repairing");
       setPhase("Asking AI to repair a startup error…");
       const repaired = await requestGame(
         "Repair the failed rendering or control check while preserving this game's intended rules and artwork. Every declared action must visibly affect actual gameplay.",
@@ -127,6 +137,8 @@ function App() {
         failure instanceof Error ? failure.message : "Startup failed",
         setPhase,
       );
+      setGenerationStage("checking");
+      setPhase("Checking your updated game…");
       await probeGame(repaired);
       return repaired;
     }
@@ -142,6 +154,7 @@ function App() {
       return;
     }
     setFormError(null);
+    setGenerationStage("writing");
     setPending(true);
     setError("");
     setPhase("AI is writing your game…");
@@ -158,7 +171,7 @@ function App() {
         prompt,
       });
       setSaved(false);
-      setNotice("AI-written game checked. Ready to play.");
+      setNotice("100% — Your game is ready to play.");
       location.hash = "studio";
     } catch (err) {
       setFormError({
@@ -191,6 +204,7 @@ function App() {
       return;
     }
     setFormError(null);
+    setGenerationStage("writing");
     setPending(true);
     setError("");
     setPhase("AI is editing the source…");
@@ -306,13 +320,16 @@ function App() {
             {games.length > 0 && <span className="count">{games.length}</span>}
           </a>
         </nav>
-        <span className="header-note">Small idea. Whole new world.</span>
+        <span className="header-note">
+          An experiment in playable imagination.
+        </span>
       </header>
       <main id="main" tabIndex={-1}>
         {route === "home" && (
           <>
-            <section className="hero">
+            <section className="hero hero-simple">
               <div className="hero-copy">
+                <span className="mvp-badge">MVP · Early access</span>
                 <h1 ref={title} tabIndex={-1}>
                   Your imagination,
                   <br />
@@ -323,18 +340,6 @@ function App() {
                   <br />A little idea is all it takes to start a whole new
                   adventure.
                 </p>
-              </div>
-              <div className="hero-art code-hero" aria-hidden="true">
-                <span className="code-window-dots">● ● ●</span>
-                <span className="code-hero-symbol">{"{ play }"}</span>
-                <p>
-                  Your idea becomes
-                  <br />
-                  <b>rules, art &amp; code.</b>
-                </p>
-                <div className="art-caption">
-                  <span className="status-dot" /> Written by AI. Played by you.
-                </div>
               </div>
             </section>
             <section className="create-section" aria-label="Create a game">
@@ -377,17 +382,20 @@ function App() {
                     ) : (
                       <WandSparkles size={18} />
                     )}{" "}
-                    {pending ? "Designing…" : "Create my game"}
+                    {pending ? "Generating…" : "Create my game"}
                     <ArrowUpRight size={18} />
                   </button>
                 </div>
               </form>
               <p className="honesty" id="create-help">
-                Describe any game idea. AI builds a compact 2D prototype;
-                complex ideas may be simplified. Generation uses your provider’s
-                available free quota and can need a repair.
+                This is an early MVP. AI can misunderstand an idea, simplify a
+                game or introduce glitches. Start small, try a round, then tell
+                it what to change.
               </p>
             </section>
+            {pending && (
+              <GenerationProgress phase={phase} stage={generationStage} />
+            )}
             <section className="examples-section">
               <div className="section-heading">
                 <div>
@@ -464,6 +472,15 @@ function App() {
                 </button>
               </div>
             </div>
+            <p className="mvp-notice">
+              <span className="mvp-badge">MVP</span> You’re playing an
+              AI-generated prototype. Rules, visuals or controls may be
+              imperfect. Restart, request a change or return to an earlier
+              version if something feels off.
+            </p>
+            {pending && (
+              <GenerationProgress phase={phase} stage={generationStage} />
+            )}
             <div className="studio-layout">
               <div className="play-column">
                 {isCodeGame(spec) ? (
@@ -612,6 +629,10 @@ function App() {
                   Your little worlds.
                 </h1>
                 <p>Saved on this browser. Ready for another adventure.</p>
+                <p className="library-mvp">
+                  MVP prototypes: saved games can still contain AI quirks or
+                  glitches.
+                </p>
               </div>
               <div className="studio-actions">
                 <button onClick={() => fileInput.current?.click()}>
@@ -630,7 +651,14 @@ function App() {
                 Valid games are still available.
               </p>
             )}
-            {games.length === 0 ? (
+            {libraryLoading ? (
+              <>
+                <p role="status" className="sr-only">
+                  Loading your games…
+                </p>
+                <LoadingSkeleton cards />
+              </>
+            ) : games.length === 0 ? (
               <div className="empty-state">
                 <Library size={42} strokeWidth={1} />
                 <h2>Room for your first world.</h2>
@@ -726,7 +754,7 @@ function App() {
             <a href="#home">Go to JustPlay</a>
           </section>
         )}
-        {(error || notice || pending) && (
+        {(error || notice) && !pending && (
           <div
             className={`notification ${error ? "error" : ""}`}
             role={error ? "alert" : "status"}
@@ -759,7 +787,7 @@ function App() {
         <a className="brand" href="#home">
           justplay.
         </a>
-        <span>A little imagination goes a long way.</span>
+        <span>MVP · Built for experimenting. AI results may vary.</span>
         <a
           href="https://github.com/ramitbuilds/JustPlay"
           target="_blank"

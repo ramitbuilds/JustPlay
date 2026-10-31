@@ -1,3 +1,11 @@
+# MVP experience update
+
+Removed the hero artwork, centred the remaining introduction, and added accessible skeletons for generation preview, player preparation and library loading. Generation now shows actual phase messages, elapsed time, a typical 1–2 minute wait range and an explicitly estimated percentage, capped below 100 until the result succeeds. Longer waits and repair stages have appropriate copy. Progress scrolls into view and honors reduced motion. MVP limitations appear on the home page, progress panel, studio, library and footer. README is now a project-focused introduction without competitor references or architecture walkthroughs.
+
+Typecheck, ESLint, 65 unit tests, production build and emitted Node HTTP smoke passed. Five UX/browser checks passed (progress advances over time, estimate labeling, skeleton display, long-wait state, success handoff, failure recovery, mobile fit and existing homepage/library checks), plus all 3 native HTTP/browser tests. Desktop/mobile screenshots: generation-progress-desktop.png and generation-progress-mobile.png. Browser model responses were mocked for these UX checks; no new live inference is claimed. Non-error notifications allow input through their text so they do not block game controls.
+
+---
+
 # Final 2D submission verification
 
 2D-only update is deployed on main. 65 unit tests, 9 browser input/security checks and 3 native HTTP/browser checks pass. The browser tests verify reusable sprites, real two-finger drive/steer, rejection of no-op controls and acceptance of transient actions that return to their initial state. Typecheck, lint, production build and emitted Node HTTP smoke pass.

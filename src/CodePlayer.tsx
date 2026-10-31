@@ -1,3 +1,4 @@
+import LoadingSkeleton from "./LoadingSkeleton";
 import { prepareGame } from "./game-bundle";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
@@ -139,7 +140,7 @@ export default function CodePlayer({
         ))}
         {!hud.stats.length && <span>AI-written game · 800 × 450</span>}
       </div>
-      <div className="game-stage">
+      <div className="game-stage" aria-busy={state === "loading"}>
         <iframe
           key={restart + ":" + game.code}
           ref={frame}
@@ -163,12 +164,17 @@ export default function CodePlayer({
             }
           }}
         />
+        {state === "loading" && (
+          <div className="player-loading-skeleton">
+            <LoadingSkeleton />
+          </div>
+        )}
         {state !== "playing" && (
           <div className="game-overlay">
             <div>
               <h3>
                 {state === "loading"
-                  ? "Loading generated code…"
+                  ? "Getting your game ready…"
                   : state === "ready"
                     ? game.title
                     : state === "paused"
@@ -185,7 +191,7 @@ export default function CodePlayer({
                   : state === "ready"
                     ? game.instructions
                     : state === "loading"
-                      ? "Starting the isolated game worker."
+                      ? "Loading artwork and preparing the play area."
                       : notice || "Your game is paused."}
               </p>
               {state === "ready" || state === "paused" ? (

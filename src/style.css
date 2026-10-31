@@ -1613,3 +1613,321 @@ footer > a:last-child {
   font-size: 10px;
   opacity: 0.65;
 }
+.hero.hero-simple {
+  display: block;
+  padding-bottom: 24px;
+}
+.hero-simple .hero-copy {
+  max-width: 900px;
+}
+.hero-simple h1 {
+  margin-top: 22px;
+}
+.mvp-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  border: 1px solid #b9c5ad;
+  background: #e9eddf;
+  color: #36563d;
+  border-radius: 100px;
+  padding: 7px 11px;
+}
+.mvp-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  line-height: 1.7;
+  color: var(--muted);
+  font-size: 12px;
+  padding: 16px 0;
+  border-top: 1px solid var(--line);
+  margin: 0 0 24px;
+}
+.mvp-notice .mvp-badge {
+  flex-shrink: 0;
+}
+.library-mvp {
+  max-width: 560px !important;
+  font-size: 12px !important;
+  margin-top: 8px !important;
+}
+.generation-panel {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #eeefe5;
+  padding: 28px;
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 32px;
+  margin: 24px 0 48px;
+  scroll-margin-top: 100px;
+}
+.generation-copy {
+  min-width: 0;
+}
+.eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--moss);
+}
+.generation-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-top: 14px;
+}
+.generation-heading h2 {
+  font-size: 25px;
+  letter-spacing: -0.04em;
+  line-height: 1.2;
+  margin: 0;
+  max-width: 340px;
+}
+.generation-percent {
+  font-size: 36px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.05em;
+  white-space: nowrap;
+}
+.generation-percent small {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0;
+  color: var(--muted);
+  text-align: right;
+}
+.generation-phase {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--moss);
+  min-height: 36px;
+}
+.generation-phase svg {
+  flex-shrink: 0;
+}
+.generation-track {
+  height: 7px;
+  background: #dce2d2;
+  border-radius: 20px;
+  overflow: hidden;
+}
+.generation-track > span {
+  display: block;
+  height: 100%;
+  background: var(--moss);
+  border-radius: 20px;
+  transition: width 1s ease;
+}
+.generation-timing {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 10px;
+  line-height: 1.6;
+  font-variant-numeric: tabular-nums;
+}
+.generation-timing > span:last-child {
+  white-space: nowrap;
+}
+.generation-steps {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  list-style: none;
+  padding: 0;
+  margin: 24px 0 16px;
+  font-size: 10px;
+  color: var(--muted);
+}
+.generation-steps li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.generation-steps li > span {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 1px solid #bfc9b6;
+  border-radius: 100%;
+}
+.generation-steps .current {
+  color: var(--ink);
+  font-weight: 600;
+}
+.generation-steps .current > span {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+.generation-steps .done {
+  color: var(--moss);
+}
+.estimate-note {
+  font-size: 10px;
+  line-height: 1.7;
+  color: var(--muted);
+  margin: 0;
+  max-width: 490px;
+}
+.game-skeleton {
+  border: 1px solid #d2d9c8;
+  background: #f7f7f0;
+  padding: 16px;
+  border-radius: 10px;
+  align-self: center;
+  width: 100%;
+  overflow: hidden;
+}
+.skeleton {
+  background: linear-gradient(100deg, #dfe4d6 20%, #eef1e8 40%, #dfe4d6 60%);
+  background-size: 220% 100%;
+  animation: skeleton-shimmer 1.8s linear infinite;
+  border-radius: 4px;
+}
+.skeleton-score {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.skeleton-score > span {
+  height: 10px;
+  width: 48px;
+}
+.skeleton-canvas {
+  aspect-ratio: 16/9;
+  width: 100%;
+}
+.skeleton-controls {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+.skeleton-controls > span {
+  height: 26px;
+  width: 38px;
+}
+.library-skeletons {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+.skeleton-cover {
+  aspect-ratio: 16/9;
+  width: 100%;
+  margin-bottom: 16px;
+}
+.skeleton-line {
+  height: 16px;
+  width: 75%;
+  margin: 12px 0;
+}
+.skeleton-line.short {
+  width: 45%;
+  height: 10px;
+}
+.player-loading-skeleton {
+  position: absolute;
+  inset: 0;
+  padding: 16px;
+  background: #23392e;
+}
+.player-loading-skeleton .game-skeleton {
+  height: 100%;
+  background: #263d31;
+  border-color: #415547;
+}
+.player-loading-skeleton .skeleton {
+  background: linear-gradient(100deg, #334d3d 20%, #46624e 40%, #334d3d 60%);
+  background-size: 220% 100%;
+}
+.player-loading-skeleton .skeleton-canvas {
+  height: 55%;
+  aspect-ratio: auto;
+}
+.player-loading-skeleton + .game-overlay {
+  background: #12282180;
+}
+@keyframes skeleton-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -20% 0;
+  }
+}
+@media (max-width: 760px) {
+  .generation-panel {
+    grid-template-columns: 1fr;
+    padding: 20px;
+    gap: 24px;
+  }
+  .generation-heading h2 {
+    font-size: 23px;
+  }
+  .generation-panel .game-skeleton {
+    max-height: 230px;
+  }
+  .generation-panel .skeleton-canvas {
+    max-height: 140px;
+  }
+  .library-skeletons {
+    grid-template-columns: 1fr;
+  }
+  .mvp-notice {
+    font-size: 11px;
+  }
+  .hero-simple .mvp-badge {
+    margin-top: 0;
+  }
+  .generation-timing {
+    font-size: 10px;
+  }
+  .generation-steps {
+    font-size: 9px;
+    gap: 6px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+  .generation-track > span {
+    transition: none;
+  }
+}
+.notification:not(.error) {
+  pointer-events: none;
+}
+.notification button {
+  pointer-events: auto;
+}
+.hero-simple .hero-copy {
+  margin-inline: auto;
+  text-align: center;
+}
+.create-section:has(+ .generation-panel) {
+  padding-bottom: 16px;
+}
+.skip-link:not(:focus) {
+  clip-path: inset(50%);
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  white-space: nowrap;
+}

@@ -62,12 +62,7 @@ test("source creation, input, edit, history and persistence through native Verce
   await page.getByRole("button", { name: "Play game", exact: true }).click();
   const paint = page.getByRole("button", { name: "Paint", exact: true });
   await expect(paint).toBeEnabled();
-  const box = await paint.boundingBox();
-  if (!box) throw Error("Missing generated control");
-  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-  await page.mouse.down();
-  await page.waitForTimeout(120);
-  await page.mouse.up();
+  await paint.click({ delay: 120 });
   await expect(page.locator(".generated-hud")).toContainText("1");
   expect(errors).toEqual([]);
 });
