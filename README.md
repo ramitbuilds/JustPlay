@@ -2,14 +2,14 @@
 
 Create and remix small 2D arcade games with AI.
 
-**Describe your game. Play it immediately.** AI writes the game's JavaScript mechanics and procedural artwork, which run in an isolated Canvas player. There are no keyword routes, fixed game families or substitute templates in new generation. Complex ideas become small 2D prototypes; quality and availability depend on the model and free quota.
+**Describe your game. Play it immediately.** AI writes the game's JavaScript mechanics and procedural artwork with reusable local sprites, which run in an isolated Canvas player. There are no keyword routes, fixed game families or substitute templates in new generation. Complex ideas become small 2D prototypes; quality and availability depend on the model and free quota.
 
 **[Open JustPlay](https://justplay-olive-eta.vercel.app/)**
 
 ## What works
 
 - Original source generation through Google AI Studio’s native Gemini API using Gemma 4. Groq remains an explicit optional adapter.
-- Syntax validation, isolated startup probing and one AI repair attempt.
+- Syntax validation, isolated rendering/control checks and one full-source AI repair attempt.
 - Keyboard/pointer input, mobile controls generated from the game manifest, pause/restart/fullscreen and sound opt-in.
 - Natural-language source patches, immutable history, actual source viewer, local saves, JSON export/import.
 - Legacy saved games remain playable; they are not used to answer new requests.

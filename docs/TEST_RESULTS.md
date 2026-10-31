@@ -1,3 +1,11 @@
+# Final 2D submission verification
+
+2D-only update is deployed on main. 65 unit tests, 9 browser input/security checks and 3 native HTTP/browser checks pass. The browser tests verify reusable sprites, real two-finger drive/steer, rejection of no-op controls and acceptance of transient actions that return to their initial state. Typecheck, lint, production build and emitted Node HTTP smoke pass.
+
+Live racing verification exposed a problem with model-authored test metadata. Control tests now run automatically in the engine; optional hints are not required for generation. Repairs now request complete corrected source. Current production calls subsequently encountered Google HTTP 500 errors even after retry. Both reviewed free Gemma models and Google's native streamGenerateContent retry path are supported; Google subsequently recovered: the actual live prompt "Make a 2D car racing game" returned Turbo Circuit in 41 seconds. The browser caught an invalid KeyboardEvent reference, requested a complete AI repair, and accepted the repaired output at 83 seconds. Physical ArrowUp plus ArrowLeft controls changed the live HUD from Distance0 to Distance23; sprite rendering worked and no runtime/page errors occurred. The exact AI export is docs/examples/turbo-circuit.json and the screenshot is screenshots/racing-live-playing.png. This is a compact driving/coin challenge rather than a full opponent racing simulation. No prewritten racing game or substituted template was shipped.
+
+---
+
 # 2D playability repair — 2026-10-31
 
 Submission scope is 2D, following the user's deadline. Added reusable original MIT sprites, direct native control hints, multitouch-safe controls, numeric gameplay inspection and per-control input checks with deterministic baseline comparisons. New games require these checks; one repair receives actual failure details.

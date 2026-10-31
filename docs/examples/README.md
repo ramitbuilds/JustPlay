@@ -1,0 +1,1 @@
+Turbo Circuit is the exact Gemma-generated export accepted by the live 2D checks and played with physical keyboard controls on 2026-10-31. Import the JSON through Your library → Import game for a quick demo. It is a saved AI output; new creation requests still use the Google provider.
