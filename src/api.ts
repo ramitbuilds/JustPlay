@@ -30,6 +30,10 @@ export async function requestGame(
       throw new Error(
         "Game creation took too long. Try again with a simpler idea.",
       );
+    if (response.status >= 500)
+      throw new Error(
+        "The game service is temporarily unavailable. Try again shortly; if it continues, check the Vercel function deployment.",
+      );
     if ([401, 403].includes(response.status))
       throw new Error(
         "This deployment requires access. Sign in to the deployment, or open its public production URL.",

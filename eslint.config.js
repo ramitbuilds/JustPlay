@@ -5,6 +5,8 @@ export default ts.config(
   {
     ignores: [
       ".wrangler/**",
+      ".vercel/**",
+      ".vercel-check/**",
       ".impeccable/**",
       "dist/**",
       "node_modules/**",

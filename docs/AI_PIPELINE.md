@@ -16,4 +16,4 @@ The allowlist rejects arbitrary paid-model identifiers. It cannot inspect billin
 
 ## Hosting adapters
 
-Cloudflare routes to the shared handler via `worker.ts` or the Pages entry. Vercel discovers root `api/generate.ts`, uses its Web Standard fetch export and supplies server environment variables plus its own bounded limiter. The shared handler accepts an explicit host-derived client IP; Vercel never trusts a caller-supplied Cloudflare IP header. Native function duration is 60 seconds; each provider attempt remains bounded to 18 seconds and the browser to 45 seconds.
+Cloudflare routes to the shared handler via `worker.ts` or the Pages entry. Vercel discovers root `api/generate.ts`, adapts its Node request/response signature to the shared Web Standard handler and supplies server environment variables plus its own bounded limiter. The shared handler accepts an explicit host-derived client IP; Vercel never trusts a caller-supplied Cloudflare IP header. Native function duration is 60 seconds; each provider attempt remains bounded to 18 seconds and the browser to 45 seconds.

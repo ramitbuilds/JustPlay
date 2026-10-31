@@ -65,7 +65,7 @@ describe("bounded server-side instance limiter", () => {
     expect((await limiter.limit({ key: "b" })).success).toBe(false);
   });
 });
-describe("actual Vercel function entry point", () => {
+describe("shared Vercel server handler", () => {
   beforeEach(() => {
     vi.stubEnv("AI_PROVIDER", "groq");
     vi.stubEnv("GROQ_API_KEY", "server-only-test-key");
@@ -84,17 +84,17 @@ describe("actual Vercel function entry point", () => {
       body: JSON.stringify(body),
     });
   it("generates and edits through the real adapter and validator", async () => {
-    const upstream = vi
-      .fn()
-      .mockImplementation(() =>
-        Promise.resolve(
-          Response.json({
-            choices: [{ message: { content: JSON.stringify(spec) } }],
-          }),
-        ),
-      );
+    const upstream = vi.fn().mockImplementation(() =>
+      Promise.resolve(
+        Response.json({
+          choices: [{ message: { content: JSON.stringify(spec) } }],
+        }),
+      ),
+    );
     vi.stubGlobal("fetch", upstream);
-    const handler = (await import("../api/generate")).default;
+    const handler = {
+      fetch: (await import("../src/server/vercel")).handleVercelRequest,
+    };
     for (const body of [
       { prompt: "A fox in a forest" },
       { prompt: "Make it harder", current: spec },
@@ -116,8 +116,8 @@ describe("actual Vercel function entry point", () => {
     const upstream = vi.fn();
     vi.stubGlobal("fetch", upstream);
     const response = await (
-      await import("../api/generate")
-    ).default.fetch(request({ prompt: "A fox game" }));
+      await import("../src/server/vercel")
+    ).handleVercelRequest(request({ prompt: "A fox game" }));
     expect(response.status).toBe(503);
     expect(await response.json()).toMatchObject({
       error: expect.stringContaining("missing its AI key"),
@@ -128,25 +128,25 @@ describe("actual Vercel function entry point", () => {
     const upstream = vi.fn();
     vi.stubGlobal("fetch", upstream);
     const response = await (
-      await import("../api/generate")
-    ).default.fetch(
+      await import("../src/server/vercel")
+    ).handleVercelRequest(
       request({ prompt: "A fox game" }, { Origin: "https://evil.test" }),
     );
     expect(response.status).toBe(403);
     expect(upstream).not.toHaveBeenCalled();
   });
   it("uses Vercel identity, ignoring spoofed Cloudflare identity", async () => {
-    const upstream = vi
-      .fn()
-      .mockImplementation(() =>
-        Promise.resolve(
-          Response.json({
-            choices: [{ message: { content: JSON.stringify(spec) } }],
-          }),
-        ),
-      );
+    const upstream = vi.fn().mockImplementation(() =>
+      Promise.resolve(
+        Response.json({
+          choices: [{ message: { content: JSON.stringify(spec) } }],
+        }),
+      ),
+    );
     vi.stubGlobal("fetch", upstream);
-    const handler = (await import("../api/generate")).default;
+    const handler = {
+      fetch: (await import("../src/server/vercel")).handleVercelRequest,
+    };
     const ip = crypto.randomUUID();
     for (let i = 0; i < 5; i++)
       expect(
@@ -178,20 +178,31 @@ describe("client failure recovery", () => {
     async (status) => {
       vi.stubGlobal(
         "fetch",
-        vi
-          .fn()
-          .mockResolvedValue(
-            new Response("<html>app</html>", {
-              status,
-              headers: { "Content-Type": "text/html" },
-            }),
-          ),
+        vi.fn().mockResolvedValue(
+          new Response("<html>app</html>", {
+            status,
+            headers: { "Content-Type": "text/html" },
+          }),
+        ),
       );
       await expect(requestGame("a fox")).rejects.toThrow(
         "Redeploy the latest main branch",
       );
     },
   );
+  it("distinguishes a failed function from a missing route", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue(
+          new Response("FUNCTION_INVOCATION_FAILED", { status: 500 }),
+        ),
+    );
+    await expect(requestGame("a fox")).rejects.toThrow(
+      "temporarily unavailable",
+    );
+  });
   it("preserves actionable server errors", async () => {
     vi.stubGlobal(
       "fetch",
@@ -233,13 +244,11 @@ describe("client failure recovery", () => {
   it("rejects malformed success JSON and invalid designs without crashing", async () => {
     vi.stubGlobal(
       "fetch",
-      vi
-        .fn()
-        .mockResolvedValue(
-          new Response("{", {
-            headers: { "Content-Type": "application/json" },
-          }),
-        ),
+      vi.fn().mockResolvedValue(
+        new Response("{", {
+          headers: { "Content-Type": "application/json" },
+        }),
+      ),
     );
     await expect(requestGame("a fox")).rejects.toThrow("unreadable");
     vi.stubGlobal(

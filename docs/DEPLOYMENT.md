@@ -4,7 +4,7 @@ The initial task prepared Cloudflare deployment. The user subsequently deployed 
 
 ## Vercel (current deployment)
 
-The root `api/generate.ts` is a native Vercel Node.js Web Standard function. Vercel does not execute `functions/api/generate.ts` or read `wrangler.jsonc`. A frontend-only deployment therefore returned 404 at `/api/generate` even with provider keys configured. The Vercel entry now reuses the shared validated handler and reads secrets only on the server.
+The root `api/generate.ts` is a native Vercel Node.js request/response function. Vercel does not execute `functions/api/generate.ts` or read `wrangler.jsonc`. A frontend-only deployment therefore returned 404 at `/api/generate` even with provider keys configured. The Vercel entry now reuses the shared validated handler and reads secrets only on the server.
 
 In **Vercel → Project → Settings → Environment Variables**, set these for **Production** (and Preview if you use preview deployments), then redeploy the latest `main` commit:
 

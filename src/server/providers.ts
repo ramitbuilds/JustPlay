@@ -1,4 +1,4 @@
-import { parseModelSpec, specContract, type GameSpec } from "../spec";
+import { parseModelSpec, specContract, type GameSpec } from "../spec.js";
 export type ProviderEnv = {
   AI_PROVIDER?: string;
   GROQ_API_KEY?: string;

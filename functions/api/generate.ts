@@ -1,10 +1,10 @@
 import { z } from "zod";
-import { GameSpecSchema, validateSpec } from "../../src/spec";
+import { GameSpecSchema, validateSpec } from "../../src/spec.js";
 import {
   createProvider,
   ProviderError,
   type ProviderEnv,
-} from "../../src/server/providers";
+} from "../../src/server/providers.js";
 export type Env = ProviderEnv & {
   AI_RATE_LIMITER?: {
     limit(input: { key: string }): Promise<{ success: boolean }>;

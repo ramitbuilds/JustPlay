@@ -1,7 +1,6 @@
-// Test-only HTTP bridge for the real Vercel Web Standard entry point.
+// Test-only HTTP bridge for the real Vercel Node HTTP entry point.
 // No production endpoint or provider credentials are used by this server.
 import { createServer } from "node:http";
-import { Readable } from "node:stream";
 import { createServer as createViteServer } from "vite";
 
 process.env.AI_PROVIDER = "groq";
@@ -36,17 +35,8 @@ const server = createServer(async (incoming, outgoing) => {
     return;
   }
   try {
-    const request = new Request(`http://127.0.0.1:5174${incoming.url}`, {
-      method: incoming.method,
-      headers: incoming.headers,
-      ...(["GET", "HEAD"].includes(incoming.method)
-        ? {}
-        : { body: Readable.toWeb(incoming), duplex: "half" }),
-    });
-    const response = await handler.fetch(request);
-    outgoing.writeHead(response.status, Object.fromEntries(response.headers));
-    if (response.body) Readable.fromWeb(response.body).pipe(outgoing);
-    else outgoing.end();
+    incoming.headers["x-forwarded-proto"] = "http";
+    await handler(incoming, outgoing);
   } catch {
     outgoing.writeHead(500, { "Content-Type": "application/json" });
     outgoing.end(JSON.stringify({ error: "Test HTTP adapter failed." }));

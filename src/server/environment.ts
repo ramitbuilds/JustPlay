@@ -1,4 +1,4 @@
-import type { ProviderEnv } from "./providers";
+import type { ProviderEnv } from "./providers.js";
 
 export function providerEnvironment(env: NodeJS.ProcessEnv): ProviderEnv {
   const groq = env.GROQ_API_KEY?.trim();

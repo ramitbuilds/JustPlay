@@ -6,7 +6,7 @@ Vercel deployed the Vite frontend, but the only API entry point was a Cloudflare
 
 ## Change
 
-Add root `api/generate.ts` using Vercel’s native Web Standard function export, shared GameSpec validation/provider code, server-only environment resolution, bounded server-side throttling and explicit Vercel IP handling. Add Vite/function build configuration and matching security headers in `vercel.json`. Distinguish HTML deployment errors, hosting access/limits, network failures and provider JSON errors. Keep prompt data and the current game intact on failure.
+Add root `api/generate.ts` using Vercel’s Node request/response handler with explicit ESM imports, shared GameSpec validation/provider code, server-only environment resolution, bounded server-side throttling and explicit Vercel IP handling. Add Vite/function build configuration and matching security headers in `vercel.json`. Distinguish HTML deployment errors, hosting access/limits, network failures and provider JSON errors. Keep prompt data and the current game intact on failure.
 
 ## Design guidance applied
 
@@ -22,3 +22,7 @@ No file named `getdesign.md` exists in the checkout. Both `https://getdesign.md`
 - [WAF rate limiting](https://vercel.com/docs/vercel-firewall/vercel-waf/rate-limiting): Hobby eligibility and regional counter limitations.
 
 Validation results and production observations are in TEST_RESULTS.md. Keys are never read from Vite client variables, returned to the browser or committed.
+
+## Runtime verification
+
+The first Vercel build succeeded but live invocation failed before the handler returned JSON. The adapter now uses the established Node request/response signature and explicit `.js` imports throughout the shared server ESM graph. `npm run check:vercel` compiles with NodeNext, imports the emitted module in Node, and exercises the actual HTTP adapter (405 method guard, 503 missing key, 403 origin guard). This catches a class of module-loading errors that Vite's SSR transform can conceal. No deployment logs were available to attribute the original invocation failure more precisely.

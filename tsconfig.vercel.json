@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "noEmit": false,
+    "allowImportingTsExtensions": false,
+    "outDir": ".vercel-check",
+    "rootDir": ".",
+    "types": ["node"]
+  },
+  "include": ["api/**/*.ts"]
+}

@@ -9,3 +9,6 @@ test-results/
 playwright-report/
 *.tsbuildinfo
 .impeccable/
+
+.vercel/
+.vercel-check/

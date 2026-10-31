@@ -46,3 +46,7 @@ No live provider key, remote deployment, physical phone, Safari, Firefox or scre
 - Read Vercel's official design.md and published Web Interface Guidelines. Applied inline actionable errors and accessible focus/announcement behavior to the existing JustPlay design. The requested getdesign.md source was absent locally and returned HTTP 403 online; see VERCEL_FIX.md for exact source links.
 
 Production baseline: `https://justplay-olive-eta.vercel.app/` served JustPlay but GET `/api/generate` returned **404** before this fix. Deployment verification follows the push to main; no live inference result is claimed by these local tests.
+
+### Node runtime hardening
+
+The first automatic Vercel build completed, but production GET/POST returned `FUNCTION_INVOCATION_FAILED` before JSON handling. The entry now uses Node request/response semantics and explicit `.js` imports in the server ESM graph. `npm run check:vercel` compiles and imports that graph with NodeNext, then exercises real HTTP guards; it passed. The native HTTP browser tests passed again, and the expanded unit suite now has **41 passing tests**, including a distinct failed-function error case. Deployment logs were unavailable, so no more specific original exception is asserted.
