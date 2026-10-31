@@ -194,3 +194,19 @@ describe("streamed generation protocol", () => {
     ).rejects.toThrow("before a complete game");
   });
 });
+it("runtime repairs accept complete corrected source rather than fragile patches", async () => {
+  const fetcher = vi.fn().mockImplementation(success);
+  const result = await createProvider(env, fetcher).editGame(
+    game,
+    "Repair the broken control",
+    "Space did not change paint",
+  );
+  expect(result).toEqual(game);
+  const body = JSON.parse(fetcher.mock.calls[0][1].body);
+  expect(body.systemInstruction.parts[0].text).toContain(
+    "FULL corrected source",
+  );
+  expect(JSON.parse(body.contents[0].parts[0].text).runtimeError).toContain(
+    "Space",
+  );
+});

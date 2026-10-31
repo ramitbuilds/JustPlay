@@ -115,7 +115,13 @@ export function createProvider(
           ? `${name} is retrying the request…`
           : `${name} is writing the game source…`,
       );
-      const system = current ? patchRules : createRules;
+      const fullSource = !current || !!runtimeError;
+      const system = fullSource
+        ? createRules +
+          (current
+            ? "\nRepair the provided current source using runtimeError. Return the FULL corrected source and manifest, preserving unrelated mechanics and artwork."
+            : "")
+        : patchRules;
       const user = JSON.stringify({
         request: prompt,
         current: current ?? null,
@@ -124,7 +130,7 @@ export function createProvider(
       });
       const estimatedInput = Math.ceil((system.length + user.length) / 3.5);
       const tokens = Math.min(
-        current ? (groq ? 3000 : 4200) : groq ? 5400 : 7000,
+        fullSource ? (groq ? 5400 : 7000) : groq ? 3000 : 4200,
         Math.max(1200, (groq ? 7400 : 14000) - estimatedInput),
       );
       if (estimatedInput > (groq ? 6800 : 13000))
@@ -146,7 +152,9 @@ export function createProvider(
             max_completion_tokens: tokens,
             include_reasoning: false,
             reasoning_effort: "low",
-            ...(current ? { response_format: { type: "json_object" } } : {}),
+            ...(current && !fullSource
+              ? { response_format: { type: "json_object" } }
+              : {}),
           }
         : {
             systemInstruction: { parts: [{ text: system }] },
@@ -323,17 +331,18 @@ export function createProvider(
           throw new Error(
             "The previous source was truncated. Make the implementation substantially smaller but complete.",
           );
-        const result = current
-          ? applyCodePatch(
-              current,
-              JSON.parse(
-                text
-                  .trim()
-                  .replace(/^```(?:json)?\s*/i, "")
-                  .replace(/\s*```$/, ""),
-              ),
-            )
-          : parseGameSource(text);
+        const result =
+          current && !fullSource
+            ? applyCodePatch(
+                current,
+                JSON.parse(
+                  text
+                    .trim()
+                    .replace(/^```(?:json)?\s*/i, "")
+                    .replace(/\s*```$/, ""),
+                ),
+              )
+            : parseGameSource(text);
         if (result.runtimeVersion !== 2)
           throw Error(
             "New games must use runtimeVersion:2 and include renderer/assets/input verification.",
