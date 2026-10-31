@@ -12,11 +12,11 @@ In **Vercel → Project → Settings → Environment Variables**, set these for 
 | ---------------- | ------------------------- | ------------------------------- |
 | `AI_PROVIDER`    | `groq`                    | `gemma`                         |
 | `GROQ_API_KEY`   | Your Groq key (sensitive) | Not needed                      |
-| `GROQ_MODEL`     | `llama-3.3-70b-versatile` | Not needed                      |
+| `GROQ_MODEL`     | `openai/gpt-oss-20b`      | Not needed                      |
 | `GEMINI_API_KEY` | Not needed                | Your Gemini API key (sensitive) |
 | `GEMMA_MODEL`    | Not needed                | `gemma-4-26b-a4b-it`            |
 
-If exactly one provider key exists, the adapter can infer the provider when `AI_PROVIDER` is unset. With both keys present, set `AI_PROVIDER` explicitly. No `VITE_` key and no Cloudflare `AI_RATE_LIMITER` variable are needed on Vercel.
+If exactly one provider key exists, the adapter can infer the provider when `AI_PROVIDER` is unset. With both keys present, set `AI_PROVIDER` explicitly. No `VITE_` key and no Cloudflare `AI_RATE_LIMITER` variable are needed on Vercel. The previous `llama-3.3-70b-versatile` setting is normalized to `openai/gpt-oss-20b` automatically, so an old Production variable no longer blocks generation. New configurations should use the current model ID.
 
 The included `vercel.json` sets **Vite**, build command `npm run build`, output directory `dist`, security headers and a 60-second function duration. Project Root Directory must be the repository root (leave it blank), because the native function lives in root `api/`. Remove any dashboard catch-all rewrite that redirects `/api/*` to `index.html`. Production Branch must be `main`; the user's project already has a Git integration, so pushing main should start deployment. No paid Vercel add-on or database is required.
 

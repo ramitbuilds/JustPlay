@@ -17,3 +17,7 @@ The allowlist rejects arbitrary paid-model identifiers. It cannot inspect billin
 ## Hosting adapters
 
 Cloudflare routes to the shared handler via `worker.ts` or the Pages entry. Vercel discovers root `api/generate.ts`, adapts its Node request/response signature to the shared Web Standard handler and supplies server environment variables plus its own bounded limiter. The shared handler accepts an explicit host-derived client IP; Vercel never trusts a caller-supplied Cloudflare IP header. Native function duration is 60 seconds; each provider attempt remains bounded to 18 seconds and the browser to 45 seconds.
+
+## Groq model migration
+
+Live production verification reached Groq but received model-unavailable/retired for `llama-3.3-70b-versatile`. The current official [Groq TypeScript SDK README](https://github.com/groq/groq-typescript/blob/main/README.md) uses `openai/gpt-oss-20b`; its model types include both GPT OSS 20B/120B and document low/medium/high reasoning effort. The adapter now defaults to 20B with low reasoning and deterministically migrates the legacy Llama setting. There is no provider switch or quota-error fallback. Groq's rendered quota pages remain inaccessible (403); current account Free-plan eligibility still belongs to the operator, and no unlimited capacity is claimed.

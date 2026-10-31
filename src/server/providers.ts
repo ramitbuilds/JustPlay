@@ -36,12 +36,16 @@ export function createProvider(
       503,
     );
   const model = groq
-    ? env.GROQ_MODEL || "llama-3.3-70b-versatile"
+    ? !env.GROQ_MODEL || env.GROQ_MODEL === "llama-3.3-70b-versatile"
+      ? "openai/gpt-oss-20b"
+      : env.GROQ_MODEL
     : env.GEMMA_MODEL || "gemma-4-26b-a4b-it";
-  // Explicit free-model allowlists prevent accidental paid-model selection.
+  // Keep model selection bounded. The retired legacy Groq setting maps to the
+  // current SDK example model; never switch providers or retry quota failures.
+  // Account-level free-tier eligibility must still be checked by the operator.
   if (
     groq
-      ? model !== "llama-3.3-70b-versatile"
+      ? !["openai/gpt-oss-20b", "openai/gpt-oss-120b"].includes(model)
       : !["gemma-4-26b-a4b-it", "gemma-4-31b-it"].includes(model)
   )
     throw new ProviderError(
@@ -68,6 +72,7 @@ export function createProvider(
             ],
             temperature: 0.7,
             max_completion_tokens: 1800,
+            reasoning_effort: "low",
             response_format: { type: "json_object" },
           }
         : {

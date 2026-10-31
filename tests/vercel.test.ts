@@ -316,3 +316,26 @@ describe("safe upstream diagnostics", () => {
     ).rejects.toThrow("Update GEMINI_API_KEY");
   });
 });
+
+describe("current Groq model selection", () => {
+  it.each([undefined, "llama-3.3-70b-versatile"])(
+    "uses the current model for default/retired setting %s",
+    async (model) => {
+      const upstream = vi
+        .fn()
+        .mockResolvedValue(
+          Response.json({
+            choices: [{ message: { content: JSON.stringify(spec) } }],
+          }),
+        );
+      await createProvider(
+        { AI_PROVIDER: "groq", GROQ_API_KEY: "test", GROQ_MODEL: model },
+        upstream,
+      ).generateGame("a fox game");
+      const body = JSON.parse(upstream.mock.calls[0][1].body);
+      expect(body.model).toBe("openai/gpt-oss-20b");
+      expect(body.reasoning_effort).toBe("low");
+      expect(upstream).toHaveBeenCalledTimes(1);
+    },
+  );
+});
