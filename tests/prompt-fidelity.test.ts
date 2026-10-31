@@ -140,3 +140,35 @@ describe("prompt fidelity", () => {
     ).toThrow("Sports games require");
   });
 });
+
+it("repairs Groq JSON-decoding failures without treating them as account errors", async () => {
+  const fetcher = vi
+    .fn()
+    .mockResolvedValueOnce(
+      Response.json(
+        { error: { code: "json_validate_failed" } },
+        { status: 400 },
+      ),
+    )
+    .mockResolvedValueOnce(response(sportsExamples[0].spec));
+  expect(
+    (await createProvider(env, fetcher).generateGame("basketball")).genre,
+  ).toBe("basketball");
+  expect(fetcher).toHaveBeenCalledTimes(2);
+});
+it("bounds Groq JSON-decoding failure retries", async () => {
+  const fetcher = vi
+    .fn()
+    .mockImplementation(() =>
+      Promise.resolve(
+        Response.json(
+          { error: { code: "json_validate_failed" } },
+          { status: 400 },
+        ),
+      ),
+    );
+  await expect(
+    createProvider(env, fetcher).generateGame("basketball"),
+  ).rejects.toThrow("invalid design twice");
+  expect(fetcher).toHaveBeenCalledTimes(2);
+});

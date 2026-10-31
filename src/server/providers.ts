@@ -178,6 +178,15 @@ export function createProvider(
               "reason" in d &&
               d.reason === "API_KEY_INVALID",
           );
+        if (
+          groq &&
+          response.status === 400 &&
+          code === "json_validate_failed"
+        ) {
+          repair =
+            "Groq rejected the previous completion as invalid JSON-schema output. Return a complete FLAT object, with supported and reason at the same root as all GameSpec fields. Do not add a spec wrapper. Use the requested family and keep descriptions short. All fields must exactly match the schema.";
+          continue;
+        }
         const name = groq ? "Groq" : "Gemini API";
         const keyName = groq ? "GROQ_API_KEY" : "GEMINI_API_KEY";
         const modelName = groq ? "GROQ_MODEL" : "GEMMA_MODEL";
@@ -201,7 +210,7 @@ export function createProvider(
             503,
           );
         throw new ProviderError(
-          `${name} rejected the game request (HTTP ${response.status}). Check the configured model and provider account settings.`,
+          `${name} rejected the game request (HTTP ${response.status}${typeof code === "string" && ["invalid_request_error", "invalid_json_schema", "unsupported_value", "context_length_exceeded"].includes(code) ? `; ${code}` : ""}). Check the configured model and provider account settings.`,
           502,
         );
       }
