@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+  <body style="margin: 0">
+    <div id="game" style="width: 960px; height: 540px"></div>
+    <script type="module">
+      import { createRuntime, makeControls } from "/src/game/runtime.ts";
+      import { examples } from "/src/fixtures.ts";
+      const index = Number(
+        new URLSearchParams(location.search).get("game") || 0,
+      );
+      window.runtime = createRuntime(
+        document.querySelector("#game"),
+        structuredClone(examples[index].spec),
+        makeControls(),
+        (s) => (window.status = s),
+      );
+    </script>
+  </body>
+</html>
